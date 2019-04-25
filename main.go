@@ -202,6 +202,16 @@ func updateStoryArc(db *pg.DB, arc *StoryArc, page int) {
 	fmt.Printf("Update Complete. Model: %s\n", arc)
 }
 
+func getStoryArcs(db *pg.DB) []StoryArc {
+	fmt.Printf("Querying for all story-arcs\n")
+	var arcs []StoryArc
+	err := db.Model(&arcs).Select()
+	if err != nil {
+		panic(err)
+	}
+	return arcs
+}
+
 func main() {
 	defer fmt.Println("[[[WORK COMPLETE]]]")
 
@@ -217,30 +227,46 @@ func main() {
 	db := prepareDatabase()
 	defer db.Close()
 
-	stories := lookupStories()
-	fmt.Println("[STORIES]", stories)
-	// stories = stories[:1]
-	for _, endpoint := range stories {
-		story := ensureStory(db, endpoint)
+	// stories := lookupStories()
+	// fmt.Println("[STORIES]", stories)
+	// // stories = stories[:1]
+	// for _, endpoint := range stories {
+	// 	story := ensureStory(db, endpoint)
 
-		storyArcs := lookupStoryArcs(story.Endpoint)
-		fmt.Println("[STORY ARCS]", storyArcs)
-		// storyArcs = storyArcs[:1]
-		for _, endpoint := range storyArcs {
-			arc := ensureStoryArc(db, story, endpoint)
+	// 	storyArcs := lookupStoryArcs(story.Endpoint)
+	// 	fmt.Println("[STORY ARCS]", storyArcs)
+	// 	// storyArcs = storyArcs[:1]
+	// 	for _, endpoint := range storyArcs {
+	// 		arc := ensureStoryArc(db, story, endpoint)
 
-			fmt.Println()
-			fmt.Println("[SEEKING PAGES]")
-			latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
-			// latestPage := lookupLatestPage("/epilogues/candy", 41)
-			fmt.Printf("\nFound latest page: #%v\n", latestPage)
-			if latestPage != arc.Page {
-				updateStoryArc(db, arc, latestPage)
-			}
-			fmt.Println()
-			fmt.Println("----------------------------------------")
-			fmt.Println()
+	// 		fmt.Println()
+	// 		fmt.Println("[SEEKING PAGES]")
+	// 		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
+	// 		// latestPage := lookupLatestPage("/epilogues/candy", 41)
+	// 		fmt.Printf("\nFound latest page: #%v\n", latestPage)
+	// 		if latestPage != arc.Page {
+	// 			updateStoryArc(db, arc, latestPage)
+	// 		}
+	// 		fmt.Println()
+	// 		fmt.Println("----------------------------------------")
+	// 		fmt.Println()
+	// 	}
+	// }
+
+	storyArcs := getStoryArcs(db)
+	fmt.Println("[STORY ARCS]", storyArcs)
+	// storyArcs = storyArcs[:1]
+	for _, arc := range storyArcs {
+		fmt.Println()
+		fmt.Println("[SEEKING PAGES]")
+		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
+		fmt.Printf("\nFound latest page: #%v\n", latestPage)
+		if latestPage != arc.Page {
+			updateStoryArc(db, &arc, latestPage)
 		}
+		fmt.Println()
+		fmt.Println("----------------------------------------")
+		fmt.Println()
 	}
 }
 
