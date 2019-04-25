@@ -31,7 +31,7 @@ type StoryArc struct {
 }
 
 func (s StoryArc) String() string {
-	return fmt.Sprintf("StoryArc<id:%v, endpoint:'%s', page:%v, story_id:%v", s.ID, s.Endpoint, s.Page, s.StoryID)
+	return fmt.Sprintf("StoryArc<id:%v, endpoint:'%s', page:%v, story_id:%v>", s.ID, s.Endpoint, s.Page, s.StoryID)
 }
 
 type dbLogger struct{}
@@ -59,7 +59,7 @@ func prepareDatabase() *pg.DB {
 		panic(err)
 	}
 
-	db.AddQueryHook(dbLogger{})
+	// db.AddQueryHook(dbLogger{})
 
 	return db
 }
@@ -140,10 +140,6 @@ func lookupLatestPage(endpoint string, page int) int {
 		panic(err)
 	}
 
-	if page == 150 {
-		panic("Blew past the actual latest page!")
-	}
-
 	if response.StatusCode == 404 {
 		return page - 1
 	}
@@ -184,32 +180,30 @@ func ensureStory(db *pg.DB, endpoint string) *Story {
 
 func ensureStoryArc(db *pg.DB, story *Story, endpoint string) *StoryArc {
 	fmt.Println("Querying for story-arc with Endpoint =", endpoint)
-	model := &StoryArc{Endpoint: endpoint, Page: 1}
-	err := db.Model(model).Where("endpoint = ?", endpoint).Select()
-	if err != nil && err.Error() != "pg: no rows in result set" {
+	model := &StoryArc{StoryID: story.ID, Endpoint: endpoint, Page: 1}
+	inserted, err := db.Model(model).Where("endpoint = ?", endpoint).SelectOrInsert(model)
+	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Query Complete. Model: %s\n", model)
+	fmt.Printf("Query Complete. Inserted? %v  Model: %s\n", inserted, model)
 
 	return model
 }
 
-func updateStoryArc(db *pg.DB, arc *StoryArc, page int) *StoryArc {
-	fmt.Println("Querying for story-arc with Endpoint =", endpoint)
-	model := &StoryArc{Endpoint: endpoint, Page: 1}
-	err := db.Model(model).Where("endpoint = ?", endpoint).Select()
-	if err != nil && err.Error() != "pg: no rows in result set" {
+func updateStoryArc(db *pg.DB, arc *StoryArc, page int) {
+	fmt.Printf("Updating story-arc #%v with Page = %v\n", arc.ID, page)
+	arc.Page = page
+	err := db.Update(arc)
+	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Query Complete. Model: %s\n", model)
-
-	return model
+	fmt.Printf("Update Complete. Model: %s\n", arc)
 }
 
 func main() {
-	defer fmt.Println("\n[WORK COMPLETE]")
+	defer fmt.Println("[[[WORK COMPLETE]]]")
 
 	// fmt.Printf("Hello, 世界 --- %s\n", time.Now())
 
@@ -223,26 +217,31 @@ func main() {
 	db := prepareDatabase()
 	defer db.Close()
 
-	// stories := lookupStories()
-	// fmt.Println("[STORIES]   ", stories)
-	// for _, story := range stories {
-	// 	ensureStory(db, story)
-	story := ensureStory(db, "/bleep")
+	stories := lookupStories()
+	fmt.Println("[STORIES]", stories)
+	// stories = stories[:1]
+	for _, endpoint := range stories {
+		story := ensureStory(db, endpoint)
 
-	// 	storyArcs := lookupStoryArcs(story)
-	// 	fmt.Println("[STORY ARCS]", storyArcs)
-	// 	for _, arc := range storyArcs {
-	// 		arc := ensureStoryArc(db, story, arc)
-	arc := ensureStoryArc(db, story, "/bleep/bloop")
-	// 		// fmt.Println()
-	// 		// fmt.Println("[SEEKING PAGES]")
-	// 		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
-	// 		// latestPage := lookupLatestPage("/epilogues/candy", 41)
-	// 		// fmt.Printf("\nFound latest page: #%v\n", latestPage)
-	updateStoryArc(db, arc, 3)
-	// 	}
-	// }
+		storyArcs := lookupStoryArcs(story.Endpoint)
+		fmt.Println("[STORY ARCS]", storyArcs)
+		// storyArcs = storyArcs[:1]
+		for _, endpoint := range storyArcs {
+			arc := ensureStoryArc(db, story, endpoint)
 
+			fmt.Println()
+			fmt.Println("[SEEKING PAGES]")
+			latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
+			// latestPage := lookupLatestPage("/epilogues/candy", 41)
+			fmt.Printf("\nFound latest page: #%v\n", latestPage)
+			if latestPage != arc.Page {
+				updateStoryArc(db, arc, latestPage)
+			}
+			fmt.Println()
+			fmt.Println("----------------------------------------")
+			fmt.Println()
+		}
+	}
 }
 
 func uniq(slice []string) []string {
