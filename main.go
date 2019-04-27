@@ -122,49 +122,34 @@ func getStoryArcs() []db.StoryArc {
 	return new(db.StoryArc).FindAll()
 }
 
-func main() {
-	defer fmt.Println("[[[WORK COMPLETE]]]")
+func runHeavyweightPoll() {
+	stories := lookupStories()
+	fmt.Println("[STORIES]", stories)
+	for _, endpoint := range stories {
+		story := ensureStory(endpoint)
 
-	// fmt.Printf("Hello, 世界 --- %s\n", time.Now())
+		storyArcs := lookupStoryArcs(story.Endpoint)
+		fmt.Println("[STORY ARCS]", storyArcs)
+		for _, endpoint := range storyArcs {
+			arc := ensureStoryArc(story, endpoint)
 
-	// start := time.Now()
-	// response, err := http.Head("https://homestuck.com/story/8131")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println("Status Code:", response.StatusCode, "Duration:", time.Since(start))
+			fmt.Println()
+			fmt.Println("[SEEKING PAGES]")
+			latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
+			fmt.Printf("\nFound latest page: #%v\n", latestPage)
+			if latestPage != arc.Page {
+				updateStoryArc(arc, latestPage)
+			}
+			fmt.Println()
+			fmt.Println("----------------------------------------")
+			fmt.Println()
+		}
+	}
+}
 
-	defer db.CloseDatabase()
-
-	// stories := lookupStories()
-	// fmt.Println("[STORIES]", stories)
-	// // stories = stories[:1]
-	// for _, endpoint := range stories {
-	// 	story := ensureStory(endpoint)
-
-	// 	storyArcs := lookupStoryArcs(story.Endpoint)
-	// 	fmt.Println("[STORY ARCS]", storyArcs)
-	// 	// storyArcs = storyArcs[:1]
-	// 	for _, endpoint := range storyArcs {
-	// 		arc := ensureStoryArc(story, endpoint)
-
-	// 		fmt.Println()
-	// 		fmt.Println("[SEEKING PAGES]")
-	// 		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
-	// 		// latestPage := lookupLatestPage("/epilogues/candy", 41)
-	// 		fmt.Printf("\nFound latest page: #%v\n", latestPage)
-	// 		if latestPage != arc.Page {
-	// 			updateStoryArc(arc, latestPage)
-	// 		}
-	// 		fmt.Println()
-	// 		fmt.Println("----------------------------------------")
-	// 		fmt.Println()
-	// 	}
-	// }
-
+func runLightweightPoll() {
 	storyArcs := getStoryArcs()
 	fmt.Println("[STORY ARCS]", storyArcs)
-	// storyArcs = storyArcs[:1]
 	for _, arc := range storyArcs {
 		fmt.Println()
 		fmt.Println("[SEEKING PAGES]")
@@ -177,6 +162,17 @@ func main() {
 		fmt.Println("----------------------------------------")
 		fmt.Println()
 	}
+}
+
+func main() {
+	defer fmt.Println("[[[WORK COMPLETE]]]")
+	defer db.CloseDatabase()
+
+	// start := time.Now()
+	// time.Since(start)
+
+	// runHeavyweightPoll()
+	runLightweightPoll()
 }
 
 func uniq(slice []string) []string {
