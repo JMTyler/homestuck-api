@@ -12,6 +12,18 @@ import (
 
 const BaseURL = "https://www.homestuck.com"
 
+func uniq(slice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}
+
 func fetch(endpoint string) *goquery.Document {
 	response, err := http.Get(BaseURL + endpoint)
 	if err != nil {
@@ -99,46 +111,29 @@ func lookupLatestPage(endpoint string, page int) int {
 	panic(fmt.Sprintf("Request to %s/%v returned unexpected Status Code %v\n", endpoint, page, response.StatusCode))
 }
 
-func ensureStory(endpoint string) *db.Story {
-	fmt.Println("Querying for story with Endpoint =", endpoint)
-	story := &db.Story{Endpoint: endpoint}
-	return story.FindOrCreate()
-}
-
-func ensureStoryArc(story *db.Story, endpoint string) *db.StoryArc {
-	fmt.Println("Querying for story-arc with Endpoint =", endpoint)
-	arc := &db.StoryArc{StoryID: story.ID, Endpoint: endpoint, Page: 1}
-	return arc.FindOrCreate()
-}
-
-func updateStoryArc(arc *db.StoryArc, page int) {
-	fmt.Printf("Updating story-arc #%v with Page = %v\n", arc.ID, page)
-	arc.Page = page
-	arc.Update()
-}
-
-func getStoryArcs() []db.StoryArc {
-	fmt.Printf("Querying for all story-arcs\n")
-	return new(db.StoryArc).FindAll()
-}
-
 func runHeavyweightPoll() {
 	stories := lookupStories()
 	fmt.Println("[STORIES]", stories)
 	for _, endpoint := range stories {
-		story := ensureStory(endpoint)
+		fmt.Println("Querying for story with Endpoint =", endpoint)
+		story := &db.Story{Endpoint: endpoint}
+		story.FindOrCreate()
 
 		storyArcs := lookupStoryArcs(story.Endpoint)
 		fmt.Println("[STORY ARCS]", storyArcs)
 		for _, endpoint := range storyArcs {
-			arc := ensureStoryArc(story, endpoint)
+			fmt.Println("Querying for story-arc with Endpoint =", endpoint)
+			arc := &db.StoryArc{StoryID: story.ID, Endpoint: endpoint, Page: 1}
+			arc.FindOrCreate()
 
 			fmt.Println()
 			fmt.Println("[SEEKING PAGES]")
 			latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
 			fmt.Printf("\nFound latest page: #%v\n", latestPage)
 			if latestPage != arc.Page {
-				updateStoryArc(arc, latestPage)
+				fmt.Printf("Updating story-arc #%v with Page = %v\n", arc.ID, latestPage)
+				arc.Page = latestPage
+				arc.Update()
 			}
 			fmt.Println()
 			fmt.Println("----------------------------------------")
@@ -148,7 +143,9 @@ func runHeavyweightPoll() {
 }
 
 func runLightweightPoll() {
-	storyArcs := getStoryArcs()
+	fmt.Printf("Querying for all story-arcs\n")
+	storyArcs := new(db.StoryArc).FindAll()
+
 	fmt.Println("[STORY ARCS]", storyArcs)
 	for _, arc := range storyArcs {
 		fmt.Println()
@@ -156,7 +153,9 @@ func runLightweightPoll() {
 		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
 		fmt.Printf("\nFound latest page: #%v\n", latestPage)
 		if latestPage != arc.Page {
-			updateStoryArc(&arc, latestPage)
+			fmt.Printf("Updating story-arc #%v with Page = %v\n", arc.ID, latestPage)
+			arc.Page = latestPage
+			arc.Update()
 		}
 		fmt.Println()
 		fmt.Println("----------------------------------------")
@@ -173,16 +172,4 @@ func main() {
 
 	// runHeavyweightPoll()
 	runLightweightPoll()
-}
-
-func uniq(slice []string) []string {
-	keys := make(map[string]bool)
-	list := []string{}
-	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
 }
