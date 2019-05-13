@@ -1,7 +1,7 @@
 package db
 
 import (
-	"../fcm"
+	"homestuck-api/fcm"
 	"fmt"
 	"github.com/go-pg/pg/orm"
 	"time"

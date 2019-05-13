@@ -6,8 +6,8 @@ import (
 	// "io/ioutil"
 	"net/http"
 	// "time"
-	"./db"
-	// "./fcm"
+	"homestuck-api/db"
+	// "homestuck-api/fcm"
 	"regexp"
 	"strings"
 )
