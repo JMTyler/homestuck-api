@@ -36,3 +36,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[metadata.heroku]
+  root-package = "homestuck-api"
+  go-version = "1.12.5"
