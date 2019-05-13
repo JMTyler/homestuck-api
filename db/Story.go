@@ -3,15 +3,19 @@ package db
 import (
 	"fmt"
 	"github.com/go-pg/pg/orm"
+	"time"
 )
 
 type Story struct {
-	ID       int64
-	Endpoint string `sql:", notnull, unique"`
+	ID        int64
+	Title     string
+	Endpoint  string    `sql:", notnull, unique"`
+	CreatedAt time.Time `sql:", notnull, default:now()"`
+	UpdatedAt time.Time `sql:", notnull, default:now()"`
 }
 
 func (s Story) String() string {
-	return fmt.Sprintf("Story<id:%v, endpoint:'%s'>", s.ID, s.Endpoint)
+	return fmt.Sprintf("Story<id:%v, endpoint:'%s', title:'%s'>", s.ID, s.Endpoint, s.Title)
 }
 
 func (s *Story) FindOrCreate() *Story {
@@ -41,10 +45,6 @@ func (s *Story) FindOrCreate() *Story {
 }
 
 func (s Story) Init() {
-	if DB != nil {
-		return
-	}
-
 	InitDatabase()
 
 	err := DB.CreateTable((*Story)(nil), &orm.CreateTableOptions{IfNotExists: true})

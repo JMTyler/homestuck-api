@@ -7,7 +7,9 @@ import (
 	"net/http"
 	// "time"
 	"./db"
+	"./fcm"
 	"regexp"
+	"strings"
 )
 
 const BaseURL = "https://www.homestuck.com"
@@ -47,7 +49,7 @@ func fetch(endpoint string) *goquery.Document {
 	return doc
 }
 
-func lookupStories() []string {
+func lookupStories() []map[string]string {
 	doc := fetch("/stories")
 
 	links := doc.Find("a").FilterFunction(func(i int, s *goquery.Selection) bool {
@@ -60,17 +62,27 @@ func lookupStories() []string {
 			return false
 		}
 		return true
-	}).Map(func(i int, s *goquery.Selection) string {
-		href, _ := s.Attr("href")
-		// html, _ := s.Html()
-		// fmt.Printf("LINK:  %s  --  %s\n", html, href)
-		return regexp.MustCompile("^/log").ReplaceAllString(href, "")
 	})
 
-	return links
+	result := make([]map[string]string, links.Size())
+	links.Each(func(i int, s *goquery.Selection) {
+		href, _ := s.Attr("href")
+		href = regexp.MustCompile("^/log").ReplaceAllString(href, "")
+
+		title, _ := s.Parent().Parent().Find("h2").Html()
+
+		entry := make(map[string]string)
+		entry["endpoint"] = href
+		entry["title"] = strings.Title(strings.ToLower(title))
+		result[i] = entry
+
+		fmt.Printf("HTML(STORY):  %s  --  %s\n", entry["title"], entry["endpoint"])
+	})
+
+	return result
 }
 
-func lookupStoryArcs(endpoint string) []string {
+func lookupStoryArcs(endpoint string) []map[string]string {
 	doc := fetch("/log" + endpoint)
 
 	links := doc.Find("a").FilterFunction(func(i int, s *goquery.Selection) bool {
@@ -85,12 +97,28 @@ func lookupStoryArcs(endpoint string) []string {
 		return true
 	}).Map(func(i int, s *goquery.Selection) string {
 		href, _ := s.Attr("href")
-		// html, _ := s.Html()
-		// fmt.Printf("LINK:  %s  --  %s\n", html, href)
 		return regexp.MustCompile("/\\d+$").ReplaceAllString(href, "")
 	})
 
-	return uniq(links)
+	links = uniq(links)
+
+	result := make([]map[string]string, len(links))
+	for i, link := range links {
+		var title string
+		matches := regexp.MustCompile("^/[a-z-]+/([a-z-]+)").FindStringSubmatch(link)
+		if matches != nil {
+			title = strings.Title(strings.ReplaceAll(matches[1], "-", " "))
+		}
+
+		entry := make(map[string]string)
+		entry["endpoint"] = link
+		entry["title"] = title
+		result[i] = entry
+
+		fmt.Printf("HTML(ARC):  %v  --  %s\n", entry["title"], entry["endpoint"])
+	}
+
+	return result
 }
 
 func lookupLatestPage(endpoint string, page int) int {
@@ -114,16 +142,16 @@ func lookupLatestPage(endpoint string, page int) int {
 func runHeavyweightPoll() {
 	stories := lookupStories()
 	fmt.Println("[STORIES]", stories)
-	for _, endpoint := range stories {
-		fmt.Println("Querying for story with Endpoint =", endpoint)
-		story := &db.Story{Endpoint: endpoint}
+	for _, data := range stories {
+		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
+		story := &db.Story{Endpoint: data["endpoint"]}
 		story.FindOrCreate()
 
 		storyArcs := lookupStoryArcs(story.Endpoint)
 		fmt.Println("[STORY ARCS]", storyArcs)
-		for _, endpoint := range storyArcs {
-			fmt.Println("Querying for story-arc with Endpoint =", endpoint)
-			arc := &db.StoryArc{StoryID: story.ID, Endpoint: endpoint, Page: 1}
+		for _, data := range storyArcs {
+			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
+			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Page: 1}
 			arc.FindOrCreate()
 
 			fmt.Println()
@@ -131,9 +159,7 @@ func runHeavyweightPoll() {
 			latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
 			fmt.Printf("\nFound latest page: #%v\n", latestPage)
 			if latestPage != arc.Page {
-				fmt.Printf("Updating story-arc #%v with Page = %v\n", arc.ID, latestPage)
-				arc.Page = latestPage
-				arc.Update()
+				arc.ProcessPotato(latestPage)
 			}
 			fmt.Println()
 			fmt.Println("----------------------------------------")
@@ -153,9 +179,7 @@ func runLightweightPoll() {
 		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
 		fmt.Printf("\nFound latest page: #%v\n", latestPage)
 		if latestPage != arc.Page {
-			fmt.Printf("Updating story-arc #%v with Page = %v\n", arc.ID, latestPage)
-			arc.Page = latestPage
-			arc.Update()
+			arc.ProcessPotato(latestPage)
 		}
 		fmt.Println()
 		fmt.Println("----------------------------------------")
@@ -164,12 +188,26 @@ func runLightweightPoll() {
 }
 
 func main() {
-	defer fmt.Println("[[[WORK COMPLETE]]]")
+	fmt.Println()
+	defer fmt.Println("\n[[[WORK COMPLETE]]]")
 	defer db.CloseDatabase()
+
+	// slice := lookupStoryArcs("/epilogues")
+	// for _, data := range slice {
+	// 	fmt.Println("Arc:", data)
+	// }
+
+	// new(db.Story).Init()
+	// new(db.StoryArc).Init()
 
 	// start := time.Now()
 	// time.Since(start)
 
 	// runHeavyweightPoll()
-	runLightweightPoll()
+	// runLightweightPoll()
+
+	fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
+
+	// TODO: Spin up light API service to handle incoming FCM token registrations.
+	// fcm.Subscribe([]string{ myFcmToken })
 }

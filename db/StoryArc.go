@@ -1,26 +1,31 @@
 package db
 
 import (
+	"../fcm"
 	"fmt"
 	"github.com/go-pg/pg/orm"
+	"time"
 )
 
 type StoryArc struct {
-	ID       int64
-	Endpoint string `sql:", notnull, unique"`
-	Page     int    `sql:", notnull"`
-	StoryID  int64  `sql:", notnull, on_delete:CASCADE, on_update:CASCADE"`
-	Story    *Story
+	ID        int64
+	Title     string
+	Endpoint  string    `sql:", notnull, unique"`
+	Page      int       `sql:", notnull"`
+	StoryID   int64     `sql:", notnull, on_delete:CASCADE, on_update:CASCADE"`
+	CreatedAt time.Time `sql:", notnull, default:now()"`
+	UpdatedAt time.Time `sql:", notnull, default:now()"`
+	Story     *Story
 }
 
 func (s StoryArc) String() string {
-	return fmt.Sprintf("StoryArc<id:%v, endpoint:'%s', page:%v, story_id:%v>", s.ID, s.Endpoint, s.Page, s.StoryID)
+	return fmt.Sprintf("StoryArc<id:%v, endpoint:'%v', title:'%v', page:%v, %v>", s.ID, s.Endpoint, s.Title, s.Page, s.Story)
 }
 
 func (a *StoryArc) FindOrCreate() *StoryArc {
 	a.Init()
 
-	inserted, err := DB.Model(a).Where("endpoint = ?", a.Endpoint).SelectOrInsert(a)
+	inserted, err := DB.Model(a).Relation("Story").Where("story_arc.endpoint = ?", a.Endpoint).SelectOrInsert(a)
 	if err != nil {
 		panic(err)
 	}
@@ -32,6 +37,8 @@ func (a *StoryArc) FindOrCreate() *StoryArc {
 
 func (a *StoryArc) Update() {
 	a.Init()
+
+	a.UpdatedAt = time.Now()
 
 	err := DB.Update(a)
 	if err != nil {
@@ -45,18 +52,21 @@ func (a *StoryArc) FindAll() []StoryArc {
 	a.Init()
 
 	var arcs []StoryArc
-	err := DB.Model(&arcs).Select()
+	err := DB.Model(&arcs).Relation("Story").Select()
 	if err != nil {
 		panic(err)
 	}
 	return arcs
 }
 
-func (a StoryArc) Init() {
-	if DB != nil {
-		return
-	}
+func (a *StoryArc) ProcessPotato(page int) {
+	fmt.Printf("Updating story-arc #%v with Page = %v\n", a.ID, page)
+	a.Page = page
+	a.Update()
+	fcm.Ping(a.Story.Title, a.Title, a.Endpoint, a.Page)
+}
 
+func (a StoryArc) Init() {
 	InitDatabase()
 
 	err := DB.CreateTable((*StoryArc)(nil), &orm.CreateTableOptions{IfNotExists: true, FKConstraints: true})
