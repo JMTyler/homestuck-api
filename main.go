@@ -10,6 +10,7 @@ import (
 	// "homestuck-api/fcm"
 	"regexp"
 	"strings"
+	"sort"
 )
 
 const BaseURL = "https://www.homestuck.com"
@@ -79,7 +80,9 @@ func lookupStories() []map[string]string {
 		fmt.Printf("HTML(STORY):  %s  --  %s\n", entry["title"], entry["endpoint"])
 	})
 
-	return result
+
+
+	return sort.Reverse(result)
 }
 
 func lookupStoryArcs(endpoint string) []map[string]string {
@@ -118,7 +121,7 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 		fmt.Printf("HTML(ARC):  %v  --  %s\n", entry["title"], entry["endpoint"])
 	}
 
-	return result
+	return sort.Reverse(result)
 }
 
 func lookupLatestPage(endpoint string, page int) int {
@@ -144,14 +147,14 @@ func runHeavyweightPoll() {
 	fmt.Println("[STORIES]", stories)
 	for _, data := range stories {
 		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
-		story := &db.Story{Endpoint: data["endpoint"]}
+		story := &db.Story{Endpoint: data["endpoint"], Title: data["title"]}
 		story.FindOrCreate()
 
 		storyArcs := lookupStoryArcs(story.Endpoint)
 		fmt.Println("[STORY ARCS]", storyArcs)
 		for _, data := range storyArcs {
 			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
-			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Page: 1}
+			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
 			arc.FindOrCreate()
 
 			fmt.Println()
@@ -192,14 +195,14 @@ func populateEmptyStories() {
 	fmt.Println("[STORIES]", stories)
 	for _, data := range stories {
 		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
-		story := &db.Story{Endpoint: data["endpoint"]}
+		story := &db.Story{Endpoint: data["endpoint"], Title: data["title"]}
 		story.FindOrCreate()
 
 		storyArcs := lookupStoryArcs(story.Endpoint)
 		fmt.Println("[STORY ARCS]", storyArcs)
 		for _, data := range storyArcs {
 			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
-			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Page: 1}
+			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
 			arc.FindOrCreate()
 
 			fmt.Println()
