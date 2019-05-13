@@ -7,9 +7,10 @@ import (
 	"net/http"
 	// "time"
 	"homestuck-api/db"
-	// "homestuck-api/fcm"
+	"homestuck-api/fcm"
 	"regexp"
 	// "sort"
+	"os"
 	"strings"
 )
 
@@ -238,9 +239,22 @@ func main() {
 	// runHeavyweightPoll()
 	// runLightweightPoll()
 
-	populateEmptyStories()
+	if len(os.Args) == 1 {
+		fmt.Println("No command provided")
+		return
+	}
 
-	// fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
+	cmd := os.Args[1]
+	switch cmd {
+	case "populate":
+		populateEmptyStories()
+		return
+	case "ping":
+		fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
+		return
+	}
+
+	fmt.Println("Invalid command provided")
 
 	// TODO: Spin up light API service to handle incoming FCM token registrations.
 	// fcm.Subscribe([]string{ myFcmToken })
