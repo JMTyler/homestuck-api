@@ -9,8 +9,8 @@ import (
 	"homestuck-api/db"
 	// "homestuck-api/fcm"
 	"regexp"
+	// "sort"
 	"strings"
-	"sort"
 )
 
 const BaseURL = "https://www.homestuck.com"
@@ -25,6 +25,14 @@ func uniq(slice []string) []string {
 		}
 	}
 	return list
+}
+
+func reverse(slice []map[string]string) []map[string]string {
+	result := make([]map[string]string, len(slice))
+	for i := 0; i < len(slice); i++ {
+		result[i] = slice[len(slice)-i-1]
+	}
+	return result
 }
 
 func fetch(endpoint string) *goquery.Document {
@@ -80,9 +88,8 @@ func lookupStories() []map[string]string {
 		fmt.Printf("HTML(STORY):  %s  --  %s\n", entry["title"], entry["endpoint"])
 	})
 
-
-
-	return sort.Reverse(result)
+	// TODO: Make result implement sort.Interface so we can use sort.Reverse() here.
+	return reverse(result)
 }
 
 func lookupStoryArcs(endpoint string) []map[string]string {
@@ -121,7 +128,7 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 		fmt.Printf("HTML(ARC):  %v  --  %s\n", entry["title"], entry["endpoint"])
 	}
 
-	return sort.Reverse(result)
+	return reverse(result)
 }
 
 func lookupLatestPage(endpoint string, page int) int {
