@@ -49,7 +49,6 @@ func InitDatabase() *pg.DB {
 		// ApplicationName: "HomestuckAPI",
 	}
 
-	fmt.Println("Database Connection:", connOptions)
 	DB = pg.Connect(connOptions)
 
 	// DB.AddQueryHook(dbLogger{})

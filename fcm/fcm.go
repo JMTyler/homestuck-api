@@ -5,6 +5,8 @@ import (
 	"firebase.google.com/go/messaging"
 	"fmt"
 	"golang.org/x/net/context"
+	"google.golang.org/api/option"
+	"os"
 )
 
 const FCM_TOPIC = "potato"
@@ -17,7 +19,8 @@ func getContext() context.Context {
 
 // HACK: Had to make this public. Why does Ping() not recognise this function if it's private?
 func Init() {
-	app, err := firebase.NewApp(getContext(), nil)
+	googleCredentials := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	app, err := firebase.NewApp(getContext(), nil, option.WithCredentialsJSON([]byte(googleCredentials)))
 	if err != nil {
 		panic(err)
 	}
