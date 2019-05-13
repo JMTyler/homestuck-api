@@ -7,7 +7,7 @@ import (
 	"net/http"
 	// "time"
 	"./db"
-	"./fcm"
+	// "./fcm"
 	"regexp"
 	"strings"
 )
@@ -187,6 +187,28 @@ func runLightweightPoll() {
 	}
 }
 
+func populateEmptyStories() {
+	stories := lookupStories()
+	fmt.Println("[STORIES]", stories)
+	for _, data := range stories {
+		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
+		story := &db.Story{Endpoint: data["endpoint"]}
+		story.FindOrCreate()
+
+		storyArcs := lookupStoryArcs(story.Endpoint)
+		fmt.Println("[STORY ARCS]", storyArcs)
+		for _, data := range storyArcs {
+			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
+			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Page: 1}
+			arc.FindOrCreate()
+
+			fmt.Println()
+			fmt.Println("----------------------------------------")
+			fmt.Println()
+		}
+	}
+}
+
 func main() {
 	fmt.Println()
 	defer fmt.Println("\n[[[WORK COMPLETE]]]")
@@ -206,7 +228,9 @@ func main() {
 	// runHeavyweightPoll()
 	// runLightweightPoll()
 
-	fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
+	populateEmptyStories()
+
+	// fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
 
 	// TODO: Spin up light API service to handle incoming FCM token registrations.
 	// fcm.Subscribe([]string{ myFcmToken })
