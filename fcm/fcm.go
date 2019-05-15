@@ -65,8 +65,8 @@ func Ping(story string, arc string, endpoint string, page int) {
 			"page":     fmt.Sprintf("%v", page),
 		},
 		// Token, Topic, or Condition
-		// Topic: FCM_TOPIC,
-		Token: "fcgDjILqKCc:APA91bE7FPY_JluDslAbvYCpDlVUqEsBFzcCPuqDMGMrlUE2_N-nM_N1VjOXsuQjRmTLEeyoksh6UQRr86NL-FXCGd5-4Sd_RPnYs5BClsxoXoiinTdtbB_3r2xWm9koZSkX6s06u2GA",
+		Topic: FCM_TOPIC,
+		// Token: "fcgDjILqKCc:APA91bE7FPY_JluDslAbvYCpDlVUqEsBFzcCPuqDMGMrlUE2_N-nM_N1VjOXsuQjRmTLEeyoksh6UQRr86NL-FXCGd5-4Sd_RPnYs5BClsxoXoiinTdtbB_3r2xWm9koZSkX6s06u2GA",
 	}
 
 	_, err := fcmClient.Send(getContext(), message)
@@ -77,28 +77,30 @@ func Ping(story string, arc string, endpoint string, page int) {
 	fmt.Println("Successfully sent FCM message.")
 }
 
-func Subscribe(registrationTokens []string) {
+func Subscribe(registrationTokens []string) error {
 	if fcmClient == nil {
 		Init()
 	}
 
 	response, err := fcmClient.SubscribeToTopic(getContext(), registrationTokens, FCM_TOPIC)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println(response.SuccessCount, "tokens were subscribed successfully.")
+	return nil
 }
 
-func Unsubscribe(registrationTokens []string) {
+func Unsubscribe(registrationTokens []string) error {
 	if fcmClient == nil {
 		Init()
 	}
 
 	response, err := fcmClient.UnsubscribeFromTopic(getContext(), registrationTokens, FCM_TOPIC)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println(response.SuccessCount, "tokens were unsubscribed successfully.")
+	return nil
 }

@@ -10,6 +10,8 @@ import (
 	"homestuck-api/fcm"
 	"regexp"
 	// "sort"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -252,6 +254,46 @@ func main() {
 	case "ping":
 		fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
 		return
+	case "http":
+		http.HandleFunc("/subscribe", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+
+			reqBytes, _ := ioutil.ReadAll(r.Body)
+			var req map[string]interface{}
+			_ = json.Unmarshal(reqBytes, &req)
+			token := req["token"].(string)
+			topic, err := fcm.Subscribe([]string{token})
+			if err != nil {
+				// TODO: Gotta start using log.Fatal() and its ilk.
+				fmt.Println(err)
+				w.WriteHeader(500)
+				fmt.Fprintf(w, "")
+				return
+			}
+
+			res, _ := json.Marshal(map[string]interface{}{"topic": topic, "token": token})
+			w.Header().Add("Content-Type", "application/json")
+			fmt.Fprintf(w, string(res))
+		})
+		http.HandleFunc("/unsubscribe", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+
+			reqBytes, _ := ioutil.ReadAll(r.Body)
+			var req map[string]interface{}
+			_ = json.Unmarshal(reqBytes, &req)
+			token := req["token"].(string)
+			err := fcm.Unsubscribe([]string{token})
+			if err != nil {
+				// TODO: Gotta start using log.Fatal() and its ilk.
+				fmt.Println(err)
+				w.WriteHeader(500)
+				fmt.Fprintf(w, "")
+				return
+			}
+
+			fmt.Fprintf(w, "")
+		})
+		http.ListenAndServe(":80", nil)
 	}
 
 	fmt.Println("Invalid command provided")
