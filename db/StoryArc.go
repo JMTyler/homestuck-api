@@ -1,9 +1,9 @@
 package db
 
 import (
-	"homestuck-api/fcm"
 	"fmt"
 	"github.com/go-pg/pg/orm"
+	"homestuck-api/fcm"
 	"time"
 )
 
@@ -20,6 +20,15 @@ type StoryArc struct {
 
 func (s StoryArc) String() string {
 	return fmt.Sprintf("StoryArc<id:%v, endpoint:'%v', title:'%v', page:%v, %v>", s.ID, s.Endpoint, s.Title, s.Page, s.Story)
+}
+
+func (s *StoryArc) Scrub() map[string]interface{} {
+	return map[string]interface{}{
+		"story":    s.Story.Title,
+		"arc":      s.Title,
+		"endpoint": s.Endpoint,
+		"page":     s.Page,
+	}
 }
 
 func (a *StoryArc) FindOrCreate() *StoryArc {

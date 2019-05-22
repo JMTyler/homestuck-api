@@ -252,9 +252,10 @@ func main() {
 		populateEmptyStories()
 		return
 	case "ping":
-		fcm.Ping("Problem Sleuth", "", "/problem-sleuth", 123)
+		fcm.Ping("The Epilogues", "Candy", "/epilogues/candy", 123)
 		return
 	case "http":
+		// TODO: Might as well prefix with /v1 just in case we ever want it.  Can't hurt!
 		http.HandleFunc("/subscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
 
@@ -262,7 +263,8 @@ func main() {
 			var req map[string]interface{}
 			_ = json.Unmarshal(reqBytes, &req)
 			token := req["token"].(string)
-			topic, err := fcm.Subscribe([]string{token})
+			// TODO: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
+			err := fcm.Subscribe([]string{token})
 			if err != nil {
 				// TODO: Gotta start using log.Fatal() and its ilk.
 				fmt.Println(err)
@@ -271,7 +273,7 @@ func main() {
 				return
 			}
 
-			res, _ := json.Marshal(map[string]interface{}{"topic": topic, "token": token})
+			res, _ := json.Marshal(map[string]interface{}{"token": token})
 			w.Header().Add("Content-Type", "application/json")
 			fmt.Fprintf(w, string(res))
 		})
@@ -293,11 +295,21 @@ func main() {
 
 			fmt.Fprintf(w, "")
 		})
+		http.HandleFunc("/stories", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+
+			// TODO: Should make sure this returns stories in order of creation.
+			storyArcs := new(db.StoryArc).FindAll()
+			scrubbed := make([]map[string]interface{}, len(storyArcs))
+			for i, arc := range storyArcs {
+				scrubbed[i] = arc.Scrub()
+			}
+			res, _ := json.Marshal(scrubbed)
+			w.Header().Add("Content-Type", "application/json")
+			fmt.Fprintf(w, string(res))
+		})
 		http.ListenAndServe(":80", nil)
 	}
 
 	fmt.Println("Invalid command provided")
-
-	// TODO: Spin up light API service to handle incoming FCM token registrations.
-	// fcm.Subscribe([]string{ myFcmToken })
 }
