@@ -252,7 +252,14 @@ func main() {
 		populateEmptyStories()
 		return
 	case "ping":
-		fcm.Ping("The Epilogues", "Candy", "/epilogues/candy", 123)
+		endpoint := "/epilogues/candy"
+		if len(os.Args) >= 3 {
+			endpoint = os.Args[2]
+		}
+
+		arc := &db.StoryArc{Endpoint: endpoint}
+		arc.Find()
+		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
 		return
 	case "http":
 		// TODO: Might as well prefix with /v1 just in case we ever want it.  Can't hurt!

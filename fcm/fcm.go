@@ -9,7 +9,13 @@ import (
 	"os"
 )
 
-const FCM_TOPIC = "potato"
+const (
+	PotatoEvent = "Potato"
+	SyncEvent   = "SyncStory"
+)
+
+// TODO: Should also make this topic v1-specific if we end up prefixing the endpoints with /v1 as well.
+const topic = "Stories"
 
 var fcmClient *messaging.Client
 
@@ -32,7 +38,7 @@ func Init() {
 }
 
 // TODO: Publish
-func Ping(story string, arc string, endpoint string, page int) {
+func Ping(event string, story string, arc string, endpoint string, page int) {
 	if fcmClient == nil {
 		Init()
 	}
@@ -43,7 +49,7 @@ func Ping(story string, arc string, endpoint string, page int) {
 	//	"page":     fmt.Sprintf("%v", page),
 	// })
 
-	payload := struct {
+	payload := &struct {
 		Story    string
 		Arc      string
 		Endpoint string
@@ -59,13 +65,14 @@ func Ping(story string, arc string, endpoint string, page int) {
 	// TODO: See documentation on defining a message payload.
 	message := &messaging.Message{
 		Data: map[string]string{
+			"event":    event,
 			"story":    story,
 			"arc":      arc,
 			"endpoint": endpoint,
 			"page":     fmt.Sprintf("%v", page),
 		},
 		// Token, Topic, or Condition
-		Topic: FCM_TOPIC,
+		Topic: topic,
 		// Token: "fcgDjILqKCc:APA91bE7FPY_JluDslAbvYCpDlVUqEsBFzcCPuqDMGMrlUE2_N-nM_N1VjOXsuQjRmTLEeyoksh6UQRr86NL-FXCGd5-4Sd_RPnYs5BClsxoXoiinTdtbB_3r2xWm9koZSkX6s06u2GA",
 	}
 
@@ -82,12 +89,12 @@ func Subscribe(registrationTokens []string) error {
 		Init()
 	}
 
-	response, err := fcmClient.SubscribeToTopic(getContext(), registrationTokens, FCM_TOPIC)
+	response, err := fcmClient.SubscribeToTopic(getContext(), registrationTokens, topic)
 	if err != nil {
 		return err
 	}
+	fmt.Println(response.SuccessCount, "tokens were subscribed to", topic)
 
-	fmt.Println(response.SuccessCount, "tokens were subscribed successfully.")
 	return nil
 }
 
@@ -96,11 +103,11 @@ func Unsubscribe(registrationTokens []string) error {
 		Init()
 	}
 
-	response, err := fcmClient.UnsubscribeFromTopic(getContext(), registrationTokens, FCM_TOPIC)
+	response, err := fcmClient.UnsubscribeFromTopic(getContext(), registrationTokens, topic)
 	if err != nil {
 		return err
 	}
+	fmt.Println(response.SuccessCount, "tokens were unsubscribed from", topic)
 
-	fmt.Println(response.SuccessCount, "tokens were unsubscribed successfully.")
 	return nil
 }

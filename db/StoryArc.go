@@ -44,6 +44,19 @@ func (a *StoryArc) FindOrCreate() *StoryArc {
 	return a
 }
 
+func (a *StoryArc) Find() *StoryArc {
+	a.Init()
+
+	err := DB.Model(a).Relation("Story").Where("story_arc.endpoint = ?", a.Endpoint).Select(a)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Query Complete. Model: %s\n", a)
+
+	return a
+}
+
 func (a *StoryArc) Update() {
 	a.Init()
 
@@ -72,7 +85,7 @@ func (a *StoryArc) ProcessPotato(page int) {
 	fmt.Printf("Updating story-arc #%v with Page = %v\n", a.ID, page)
 	a.Page = page
 	a.Update()
-	fcm.Ping(a.Story.Title, a.Title, a.Endpoint, a.Page)
+	fcm.Ping(fcm.PotatoEvent, a.Story.Title, a.Title, a.Endpoint, a.Page)
 }
 
 func (a StoryArc) Init() {
