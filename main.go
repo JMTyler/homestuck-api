@@ -315,7 +315,12 @@ func main() {
 			w.Header().Add("Content-Type", "application/json")
 			fmt.Fprintf(w, string(res))
 		})
-		http.ListenAndServe(":80", nil)
+
+		port, exists := os.LookupEnv("PORT")
+		if !exists {
+			port = "80"
+		}
+		http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 	}
 
 	fmt.Println("Invalid command provided")
