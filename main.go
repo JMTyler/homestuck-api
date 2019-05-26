@@ -262,8 +262,7 @@ func main() {
 		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
 		return
 	case "http":
-		// TODO: Might as well prefix with /v1 just in case we ever want it.  Can't hurt!
-		http.HandleFunc("/subscribe", func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/v1/subscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
 
 			reqBytes, _ := ioutil.ReadAll(r.Body)
@@ -284,7 +283,7 @@ func main() {
 			w.Header().Add("Content-Type", "application/json")
 			fmt.Fprintf(w, string(res))
 		})
-		http.HandleFunc("/unsubscribe", func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/v1/unsubscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
 
 			reqBytes, _ := ioutil.ReadAll(r.Body)
@@ -302,7 +301,7 @@ func main() {
 
 			fmt.Fprintf(w, "")
 		})
-		http.HandleFunc("/stories", func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/v1/stories", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
 
 			// TODO: Should make sure this returns stories in order of creation.

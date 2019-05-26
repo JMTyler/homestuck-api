@@ -14,8 +14,7 @@ const (
 	SyncEvent   = "SyncStory"
 )
 
-// TODO: Should also make this topic v1-specific if we end up prefixing the endpoints with /v1 as well.
-const topic = "Stories"
+const topic = "v1-Stories"
 
 var fcmClient *messaging.Client
 
