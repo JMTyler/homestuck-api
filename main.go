@@ -79,7 +79,7 @@ func lookupStories() []map[string]string {
 	result := make([]map[string]string, links.Size())
 	links.Each(func(i int, s *goquery.Selection) {
 		href, _ := s.Attr("href")
-		href = regexp.MustCompile("^/log").ReplaceAllString(href, "")
+		href = regexp.MustCompile("^/log/").ReplaceAllString(href, "")
 
 		title, _ := s.Parent().Parent().Find("h2").Html()
 
@@ -96,7 +96,7 @@ func lookupStories() []map[string]string {
 }
 
 func lookupStoryArcs(endpoint string) []map[string]string {
-	doc := fetch("/log" + endpoint)
+	doc := fetch("/log/" + endpoint)
 
 	links := doc.Find("a").FilterFunction(func(i int, s *goquery.Selection) bool {
 		href, exists := s.Attr("href")
@@ -110,7 +110,7 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 		return true
 	}).Map(func(i int, s *goquery.Selection) string {
 		href, _ := s.Attr("href")
-		return regexp.MustCompile("/\\d+$").ReplaceAllString(href, "")
+		return strings.TrimPrefix(regexp.MustCompile("/\\d+$").ReplaceAllString(href, ""), "/")
 	})
 
 	links = uniq(links)
@@ -118,7 +118,7 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 	result := make([]map[string]string, len(links))
 	for i, link := range links {
 		var title string
-		matches := regexp.MustCompile("^/[a-z-]+/([a-z-]+)").FindStringSubmatch(link)
+		matches := regexp.MustCompile("^[a-z-]+/([a-z-]+)").FindStringSubmatch(link)
 		if matches != nil {
 			title = strings.Title(strings.ReplaceAll(matches[1], "-", " "))
 		}
@@ -135,8 +135,8 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 }
 
 func lookupLatestPage(endpoint string, page int) int {
-	response, err := http.Head(fmt.Sprintf("%s%s/%v", BaseURL, endpoint, page))
-	fmt.Printf("Seeking on %s -- Checking page %v -- Status Code %v\n", endpoint, page, response.StatusCode)
+	response, err := http.Head(fmt.Sprintf("%s/%s/%v", BaseURL, endpoint, page))
+	fmt.Printf("Seeking on /%s -- Checking page %v -- Status Code %v\n", endpoint, page, response.StatusCode)
 	if err != nil {
 		panic(err)
 	}
@@ -149,7 +149,7 @@ func lookupLatestPage(endpoint string, page int) int {
 		return lookupLatestPage(endpoint, page+1)
 	}
 
-	panic(fmt.Sprintf("Request to %s/%v returned unexpected Status Code %v\n", endpoint, page, response.StatusCode))
+	panic(fmt.Sprintf("Request to /%s/%v returned unexpected Status Code %v\n", endpoint, page, response.StatusCode))
 }
 
 func runHeavyweightPoll() {
@@ -252,7 +252,7 @@ func main() {
 		populateEmptyStories()
 		return
 	case "ping":
-		endpoint := "/epilogues/candy"
+		endpoint := "epilogues/candy"
 		if len(os.Args) >= 3 {
 			endpoint = os.Args[2]
 		}
@@ -269,7 +269,7 @@ func main() {
 			var req map[string]interface{}
 			_ = json.Unmarshal(reqBytes, &req)
 			token := req["token"].(string)
-			// TODO: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
+			// BLOCKER: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
 			err := fcm.Subscribe([]string{token})
 			if err != nil {
 				// TODO: Gotta start using log.Fatal() and its ilk.
@@ -304,7 +304,6 @@ func main() {
 		http.HandleFunc("/v1/stories", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
 
-			// TODO: Should make sure this returns stories in order of creation.
 			storyArcs := new(db.StoryArc).FindAll()
 			scrubbed := make([]map[string]interface{}, len(storyArcs))
 			for i, arc := range storyArcs {
