@@ -73,7 +73,6 @@ func Ping(event string, story string, arc string, endpoint string, page int) {
 		},
 		// Token, Topic, or Condition
 		Topic: topic,
-		// Token: "fcgDjILqKCc:APA91bE7FPY_JluDslAbvYCpDlVUqEsBFzcCPuqDMGMrlUE2_N-nM_N1VjOXsuQjRmTLEeyoksh6UQRr86NL-FXCGd5-4Sd_RPnYs5BClsxoXoiinTdtbB_3r2xWm9koZSkX6s06u2GA",
 	}
 
 	_, err := fcmClient.Send(getContext(), message)

@@ -74,7 +74,7 @@ func (a *StoryArc) FindAll() []StoryArc {
 	a.Init()
 
 	var arcs []StoryArc
-	err := DB.Model(&arcs).Relation("Story").Select()
+	err := DB.Model(&arcs).Relation("Story").Order("story_arc.created_at").Select()
 	if err != nil {
 		panic(err)
 	}
