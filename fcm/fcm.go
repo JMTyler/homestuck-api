@@ -37,6 +37,7 @@ func Init() {
 }
 
 // TODO: Publish
+// TODO: Should switch to using a struct like below, or StoryArc.Scrub(), instead of passing params directly.
 func Ping(event string, story string, arc string, endpoint string, page int) {
 	if fcmClient == nil {
 		Init()
@@ -63,15 +64,14 @@ func Ping(event string, story string, arc string, endpoint string, page int) {
 
 	// TODO: See documentation on defining a message payload.
 	message := &messaging.Message{
+		Topic: topic,
 		Data: map[string]string{
 			"event":    event,
-			"story":    story,
-			"arc":      arc,
 			"endpoint": endpoint,
-			"page":     fmt.Sprintf("%v", page),
+			"title":    story,
+			"subtitle": arc,
+			"pages":    fmt.Sprintf("%v", page),
 		},
-		// Token, Topic, or Condition
-		Topic: topic,
 	}
 
 	_, err := fcmClient.Send(getContext(), message)
@@ -79,6 +79,7 @@ func Ping(event string, story string, arc string, endpoint string, page int) {
 		panic(err)
 	}
 
+	// BLOCKER: Remove much of the logging.
 	fmt.Println("Successfully sent FCM message.")
 }
 

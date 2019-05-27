@@ -24,10 +24,10 @@ func (s StoryArc) String() string {
 
 func (s *StoryArc) Scrub() map[string]interface{} {
 	return map[string]interface{}{
-		"story":    s.Story.Title,
-		"arc":      s.Title,
 		"endpoint": s.Endpoint,
-		"page":     s.Page,
+		"title":    s.Story.Title,
+		"subtitle": s.Title,
+		"pages":    s.Page,
 	}
 }
 
