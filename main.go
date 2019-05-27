@@ -202,22 +202,22 @@ func runLightweightPoll() {
 
 func populateEmptyStories() {
 	stories := lookupStories()
-	fmt.Println("[STORIES]", stories)
+	// fmt.Println("[STORIES]", stories)
 	for _, data := range stories {
-		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
+		// fmt.Println("Querying for story with Endpoint =", data["endpoint"])
 		story := &db.Story{Endpoint: data["endpoint"], Title: data["title"]}
 		story.FindOrCreate()
 
 		storyArcs := lookupStoryArcs(story.Endpoint)
-		fmt.Println("[STORY ARCS]", storyArcs)
+		// fmt.Println("[STORY ARCS]", storyArcs)
 		for _, data := range storyArcs {
-			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
+			// fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
 			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
 			arc.FindOrCreate()
 
-			fmt.Println()
-			fmt.Println("----------------------------------------")
-			fmt.Println()
+			// fmt.Println()
+			// fmt.Println("----------------------------------------")
+			// fmt.Println()
 		}
 	}
 }

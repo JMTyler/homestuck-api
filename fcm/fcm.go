@@ -49,18 +49,18 @@ func Ping(event string, story string, arc string, endpoint string, page int) {
 	//	"page":     fmt.Sprintf("%v", page),
 	// })
 
-	payload := &struct {
-		Story    string
-		Arc      string
-		Endpoint string
-		Page     int
-	}{
-		Story:    story,
-		Arc:      arc,
-		Endpoint: endpoint,
-		Page:     page,
-	}
-	fmt.Println("Constructing payload:", payload)
+	// payload := &struct {
+	// 	Story    string
+	// 	Arc      string
+	// 	Endpoint string
+	// 	Page     int
+	// }{
+	// 	Story:    story,
+	// 	Arc:      arc,
+	// 	Endpoint: endpoint,
+	// 	Page:     page,
+	// }
+	// fmt.Println("Constructing payload:", payload)
 
 	// TODO: See documentation on defining a message payload.
 	message := &messaging.Message{
@@ -79,8 +79,7 @@ func Ping(event string, story string, arc string, endpoint string, page int) {
 		panic(err)
 	}
 
-	// BLOCKER: Remove much of the logging.
-	fmt.Println("Successfully sent FCM message.")
+	// fmt.Println("Successfully sent FCM message.")
 }
 
 func Subscribe(registrationTokens []string) error {
@@ -88,11 +87,11 @@ func Subscribe(registrationTokens []string) error {
 		Init()
 	}
 
-	response, err := fcmClient.SubscribeToTopic(getContext(), registrationTokens, topic)
+	_, err := fcmClient.SubscribeToTopic(getContext(), registrationTokens, topic)
 	if err != nil {
 		return err
 	}
-	fmt.Println(response.SuccessCount, "tokens were subscribed to", topic)
+	// fmt.Println(response.SuccessCount, "tokens were subscribed to", topic)
 
 	return nil
 }
@@ -102,11 +101,11 @@ func Unsubscribe(registrationTokens []string) error {
 		Init()
 	}
 
-	response, err := fcmClient.UnsubscribeFromTopic(getContext(), registrationTokens, topic)
+	_, err := fcmClient.UnsubscribeFromTopic(getContext(), registrationTokens, topic)
 	if err != nil {
 		return err
 	}
-	fmt.Println(response.SuccessCount, "tokens were unsubscribed from", topic)
+	// fmt.Println(response.SuccessCount, "tokens were unsubscribed from", topic)
 
 	return nil
 }

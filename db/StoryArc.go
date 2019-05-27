@@ -34,12 +34,12 @@ func (s *StoryArc) Scrub() map[string]interface{} {
 func (a *StoryArc) FindOrCreate() *StoryArc {
 	a.Init()
 
-	inserted, err := DB.Model(a).Relation("Story").Where("story_arc.endpoint = ?", a.Endpoint).SelectOrInsert(a)
+	_, err := DB.Model(a).Relation("Story").Where("story_arc.endpoint = ?", a.Endpoint).SelectOrInsert(a)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Query Complete. Inserted? %v  Model: %s\n", inserted, a)
+	// fmt.Printf("Query Complete. Inserted? %v  Model: %s\n", inserted, a)
 
 	return a
 }
@@ -52,7 +52,7 @@ func (a *StoryArc) Find() *StoryArc {
 		panic(err)
 	}
 
-	fmt.Printf("Query Complete. Model: %s\n", a)
+	// fmt.Printf("Query Complete. Model: %s\n", a)
 
 	return a
 }
@@ -67,7 +67,7 @@ func (a *StoryArc) Update() {
 		panic(err)
 	}
 
-	fmt.Printf("Update Complete. Model: %s\n", a)
+	// fmt.Printf("Update Complete. Model: %s\n", a)
 }
 
 func (a *StoryArc) FindAll() []StoryArc {
@@ -82,7 +82,7 @@ func (a *StoryArc) FindAll() []StoryArc {
 }
 
 func (a *StoryArc) ProcessPotato(page int) {
-	fmt.Printf("Updating story-arc #%v with Page = %v\n", a.ID, page)
+	// fmt.Printf("Updating story-arc #%v with Page = %v\n", a.ID, page)
 	a.Page = page
 	a.Update()
 	fcm.Ping(fcm.PotatoEvent, a.Story.Title, a.Title, a.Endpoint, a.Page)

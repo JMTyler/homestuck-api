@@ -21,7 +21,7 @@ func (s Story) String() string {
 func (s *Story) FindOrCreate() *Story {
 	s.Init()
 
-	inserted, err := DB.Model(s).Where("endpoint = ?", s.Endpoint).SelectOrInsert(s)
+	_, err := DB.Model(s).Where("endpoint = ?", s.Endpoint).SelectOrInsert(s)
 	// db.ModelContext(context.Context(), &models).Select()
 	// db.Model(&models).SelectOrInsert()
 	// res, err := db.Query(&models, "endpoint = ?", endpoint)
@@ -29,7 +29,7 @@ func (s *Story) FindOrCreate() *Story {
 		panic(err)
 	}
 
-	fmt.Printf("Query Complete. Inserted? %v  Model: %s\n", inserted, s)
+	// fmt.Printf("Query Complete. Inserted? %v  Model: %s\n", inserted, s)
 
 	// if res.RowsReturned() == 0 {
 	// 	model = &Story{Endpoint: endpoint}
