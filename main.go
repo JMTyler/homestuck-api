@@ -264,6 +264,10 @@ func main() {
 	case "http":
 		http.HandleFunc("/v1/subscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Headers", "*")
+			if r.Method == "OPTIONS" {
+				return
+			}
 
 			reqBytes, _ := ioutil.ReadAll(r.Body)
 			var req map[string]interface{}
@@ -285,6 +289,10 @@ func main() {
 		})
 		http.HandleFunc("/v1/unsubscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Headers", "*")
+			if r.Method == "OPTIONS" {
+				return
+			}
 
 			reqBytes, _ := ioutil.ReadAll(r.Body)
 			var req map[string]interface{}
@@ -298,11 +306,13 @@ func main() {
 				fmt.Fprintf(w, "")
 				return
 			}
-
-			fmt.Fprintf(w, "")
 		})
 		http.HandleFunc("/v1/stories", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Headers", "*")
+			if r.Method == "OPTIONS" {
+				return
+			}
 
 			storyArcs := new(db.StoryArc).FindAll()
 			scrubbed := make([]map[string]interface{}, len(storyArcs))
@@ -312,6 +322,13 @@ func main() {
 			res, _ := json.Marshal(scrubbed)
 			w.Header().Add("Content-Type", "application/json")
 			fmt.Fprintf(w, string(res))
+		})
+
+		http.HandleFunc("/error", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Headers", "*")
+			w.WriteHeader(404)
+			fmt.Fprintf(w, "{\"message\":\"Bleep Bloop\"}")
 		})
 
 		port, exists := os.LookupEnv("PORT")
