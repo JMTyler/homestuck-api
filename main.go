@@ -6,8 +6,8 @@ import (
 	// "io/ioutil"
 	"net/http"
 	// "time"
-	"homestuck-api/db"
-	"homestuck-api/fcm"
+	"homestuck-watcher/db"
+	"homestuck-watcher/fcm"
 	"regexp"
 	// "sort"
 	"encoding/json"
@@ -261,6 +261,16 @@ func main() {
 		arc.Find()
 		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
 		return
+	case "potato":
+		endpoint := "epilogues/candy"
+		if len(os.Args) >= 3 {
+			endpoint = os.Args[2]
+		}
+
+		arc := &db.StoryArc{Endpoint: endpoint}
+		arc.Find()
+		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
+		return
 	case "http":
 		http.HandleFunc("/v1/subscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
@@ -273,7 +283,7 @@ func main() {
 			var req map[string]interface{}
 			_ = json.Unmarshal(reqBytes, &req)
 			token := req["token"].(string)
-			// BLOCKER: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
+			// TODO: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
 			err := fcm.Subscribe([]string{token})
 			if err != nil {
 				// TODO: Gotta start using log.Fatal() and its ilk.

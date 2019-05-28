@@ -1,4 +1,5 @@
-populate: homestuck-api populate
-ping: homestuck-api ping
+populate: homestuck-watcher populate
+ping: homestuck-watcher ping
+potato: homestuck-watcher potato
 
-web: homestuck-api http
+web: homestuck-watcher http

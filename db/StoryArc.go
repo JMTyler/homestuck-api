@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/go-pg/pg/orm"
-	"homestuck-api/fcm"
+	"homestuck-watcher/fcm"
 	"time"
 )
 
