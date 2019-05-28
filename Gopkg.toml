@@ -38,5 +38,5 @@
   unused-packages = true
 
 [metadata.heroku]
-  root-package = "homestuck-api"
+  root-package = "homestuck-watcher"
   go-version = "1.12.5"
