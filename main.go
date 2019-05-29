@@ -271,6 +271,9 @@ func main() {
 		arc.Find()
 		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
 		return
+	case "lightweight":
+		runLightweightPoll()
+		return
 	case "http":
 		http.HandleFunc("/v1/subscribe", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
