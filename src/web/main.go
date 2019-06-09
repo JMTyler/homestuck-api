@@ -348,7 +348,7 @@ func main() {
 		if !exists {
 			port = "80"
 		}
-		http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+		http.ListenAndServe(":"+port, nil)
 	}
 
 	fmt.Println("Invalid command provided")

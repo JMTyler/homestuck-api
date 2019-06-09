@@ -1,6 +1,9 @@
-populate: homestuck-watcher populate
-ping: homestuck-watcher ping
-potato: homestuck-watcher potato
+web:   homestuck-api
+clock: homestuck-watcher
 
-web: homestuck-watcher http
-lightweight: homestuck-watcher lightweight
+lightweight: homestuck-worker lightweight
+heavyweight: homestuck-worker heavyweight
+
+populate: homestuck-cmd populate
+ping:     homestuck-cmd ping
+potato:   homestuck-cmd potato
