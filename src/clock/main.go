@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	que "github.com/bgentry/que-go"
-	"github.com/jackc/pgx"
+	// que "github.com/bgentry/que-go"
+	// "github.com/jackc/pgx"
 	"homestuck-watcher/db"
-	"os"
+	// "os"
 )
 
 func main() {
@@ -20,22 +20,22 @@ func main() {
 	// TODO: once per day, do heavyweight
 	// ...
 
-	pgxcfg, err := pgx.ParseURI(os.Getenv("DATABASE_URL"))
-	if err != nil {
-		panic(err)
-	}
+	// pgxcfg, err := pgx.ParseURI(os.Getenv("DATABASE_URL"))
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	pgxpool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
-		ConnConfig:   pgxcfg,
-		AfterConnect: que.PrepareStatements,
-	})
-	if err != nil {
-		panic(err)
-	}
-	defer pgxpool.Close()
+	// pgxpool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
+	// 	ConnConfig:   pgxcfg,
+	// 	AfterConnect: que.PrepareStatements,
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer pgxpool.Close()
 
-	qc := que.NewClient(pgxpool)
-	qc.Enqueue(&que.Job{
-		Type: "Lightweight",
-	})
+	// qc := que.NewClient(pgxpool)
+	// qc.Enqueue(&que.Job{
+	// 	Type: "Lightweight",
+	// })
 }

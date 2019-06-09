@@ -11,8 +11,6 @@ import (
 	"regexp"
 	// "sort"
 	"encoding/json"
-	que "github.com/bgentry/que-go"
-	"github.com/jackc/pgx"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -250,26 +248,6 @@ func main() {
 
 	cmd := os.Args[1]
 	switch cmd {
-	case "clock":
-		pgxcfg, err := pgx.ParseURI(os.Getenv("DATABASE_URL"))
-		if err != nil {
-			panic(err)
-		}
-
-		pgxpool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
-			ConnConfig:   pgxcfg,
-			AfterConnect: que.PrepareStatements,
-		})
-		if err != nil {
-			panic(err)
-		}
-		defer pgxpool.Close()
-
-		qc := que.NewClient(pgxpool)
-		qc.Enqueue(&que.Job{
-			Type: "Lightweight",
-		})
-		return
 	case "populate":
 		populateEmptyStories()
 		return
