@@ -251,6 +251,13 @@ func main() {
 	cmd := os.Args[1]
 	switch cmd {
 	case "clock":
+		// TODO: once every minute, do lightweight
+		// ... start one-off dyno of `clock/worker lightweight`
+		go runLightweightWorker()
+
+		// TODO: once per day, do heavyweight
+		// ...
+
 		pgxcfg, err := pgx.ParseURI(os.Getenv("DATABASE_URL"))
 		if err != nil {
 			panic(err)
