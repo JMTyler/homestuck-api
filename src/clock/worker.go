@@ -3,18 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	// "io/ioutil"
-	"net/http"
-	// "time"
 	"homestuck-watcher/db"
-	"homestuck-watcher/fcm"
+	"net/http"
 	"regexp"
-	// "sort"
-	"encoding/json"
-	que "github.com/bgentry/que-go"
-	"github.com/jackc/pgx"
-	"io/ioutil"
-	"os"
 	"strings"
 )
 
@@ -183,7 +174,7 @@ func runHeavyweightPoll() {
 	}
 }
 
-func runLightweightPoll() {
+func runLightweightWorker() {
 	fmt.Printf("Querying for all story-arcs\n")
 	storyArcs := new(db.StoryArc).FindAll()
 
@@ -222,156 +213,4 @@ func populateEmptyStories() {
 			// fmt.Println()
 		}
 	}
-}
-
-func main() {
-	fmt.Println()
-	defer fmt.Println("\n[[[WORK COMPLETE]]]")
-	defer db.CloseDatabase()
-
-	// slice := lookupStoryArcs("/epilogues")
-	// for _, data := range slice {
-	// 	fmt.Println("Arc:", data)
-	// }
-
-	// new(db.Story).Init()
-	// new(db.StoryArc).Init()
-
-	// start := time.Now()
-	// time.Since(start)
-
-	// runHeavyweightPoll()
-	// runLightweightPoll()
-
-	if len(os.Args) == 1 {
-		fmt.Println("No command provided")
-		return
-	}
-
-	cmd := os.Args[1]
-	switch cmd {
-	case "clock":
-		pgxcfg, err := pgx.ParseURI(os.Getenv("DATABASE_URL"))
-		if err != nil {
-			panic(err)
-		}
-
-		pgxpool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
-			ConnConfig:   pgxcfg,
-			AfterConnect: que.PrepareStatements,
-		})
-		if err != nil {
-			panic(err)
-		}
-		defer pgxpool.Close()
-
-		qc := que.NewClient(pgxpool)
-		qc.Enqueue(&que.Job{
-			Type: "Lightweight",
-		})
-		return
-	case "populate":
-		populateEmptyStories()
-		return
-	case "ping":
-		endpoint := "epilogues/candy"
-		if len(os.Args) >= 3 {
-			endpoint = os.Args[2]
-		}
-
-		arc := &db.StoryArc{Endpoint: endpoint}
-		arc.Find()
-		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
-		return
-	case "potato":
-		endpoint := "epilogues/candy"
-		if len(os.Args) >= 3 {
-			endpoint = os.Args[2]
-		}
-
-		arc := &db.StoryArc{Endpoint: endpoint}
-		arc.Find()
-		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
-		return
-	case "lightweight":
-		runLightweightPoll()
-		return
-	case "http":
-		http.HandleFunc("/v1/subscribe", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Headers", "*")
-			if r.Method == "OPTIONS" {
-				return
-			}
-
-			reqBytes, _ := ioutil.ReadAll(r.Body)
-			var req map[string]interface{}
-			_ = json.Unmarshal(reqBytes, &req)
-			token := req["token"].(string)
-			// TODO: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
-			err := fcm.Subscribe([]string{token})
-			if err != nil {
-				// TODO: Gotta start using log.Fatal() and its ilk.
-				fmt.Println(err)
-				w.WriteHeader(500)
-				fmt.Fprintf(w, "")
-				return
-			}
-
-			res, _ := json.Marshal(map[string]interface{}{"token": token})
-			w.Header().Add("Content-Type", "application/json")
-			fmt.Fprintf(w, string(res))
-		})
-		http.HandleFunc("/v1/unsubscribe", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Headers", "*")
-			if r.Method == "OPTIONS" {
-				return
-			}
-
-			reqBytes, _ := ioutil.ReadAll(r.Body)
-			var req map[string]interface{}
-			_ = json.Unmarshal(reqBytes, &req)
-			token := req["token"].(string)
-			err := fcm.Unsubscribe([]string{token})
-			if err != nil {
-				// TODO: Gotta start using log.Fatal() and its ilk.
-				fmt.Println(err)
-				w.WriteHeader(500)
-				fmt.Fprintf(w, "")
-				return
-			}
-		})
-		http.HandleFunc("/v1/stories", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Headers", "*")
-			if r.Method == "OPTIONS" {
-				return
-			}
-
-			storyArcs := new(db.StoryArc).FindAll()
-			scrubbed := make([]map[string]interface{}, len(storyArcs))
-			for i, arc := range storyArcs {
-				scrubbed[i] = arc.Scrub()
-			}
-			res, _ := json.Marshal(scrubbed)
-			w.Header().Add("Content-Type", "application/json")
-			fmt.Fprintf(w, string(res))
-		})
-
-		http.HandleFunc("/error", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Headers", "*")
-			w.WriteHeader(404)
-			fmt.Fprintf(w, "{\"message\":\"Bleep Bloop\"}")
-		})
-
-		port, exists := os.LookupEnv("PORT")
-		if !exists {
-			port = "80"
-		}
-		http.ListenAndServe(":"+port, nil)
-	}
-
-	fmt.Println("Invalid command provided")
 }
