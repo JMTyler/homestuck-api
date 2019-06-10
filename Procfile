@@ -1,3 +1,3 @@
 web:   web
 
-lightweight: clock
+clock: clock
