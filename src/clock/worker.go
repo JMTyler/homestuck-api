@@ -45,7 +45,6 @@ func fetch(endpoint string) *goquery.Document {
 	// 	panic(err)
 	// }
 
-	defer response.Body.Close()
 	doc, err := goquery.NewDocumentFromResponse(response)
 	if err != nil {
 		panic(err)
