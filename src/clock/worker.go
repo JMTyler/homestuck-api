@@ -158,17 +158,6 @@ func runHeavyweightWorker() {
 			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
 			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
 			arc.FindOrCreate()
-
-			fmt.Println()
-			fmt.Println("[SEEKING PAGES]")
-			latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
-			fmt.Printf("\nFound latest page: #%v\n", latestPage)
-			if latestPage != arc.Page {
-				arc.ProcessPotato(latestPage)
-			}
-			fmt.Println()
-			fmt.Println("----------------------------------------")
-			fmt.Println()
 		}
 	}
 }

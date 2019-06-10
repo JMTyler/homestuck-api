@@ -16,7 +16,7 @@ func main() {
 	defer db.CloseDatabase()
 
 	c := cron.New()
-	c.AddFunc("0 * * * * *", func() {
+	c.AddFunc("5 * * * * *", func() {
 		// TODO: once every minute, do lightweight
 		// ... start one-off dyno of `clock/worker lightweight`
 		go runLightweightWorker()
