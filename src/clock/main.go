@@ -7,9 +7,7 @@ import (
 	"homestuck-watcher/db"
 	// "os"
 	"github.com/robfig/cron"
-	"os"
-	"os/signal"
-	"syscall"
+	"homestuck-watcher/utils"
 )
 
 func main() {
@@ -23,9 +21,10 @@ func main() {
 		// ... start one-off dyno of `clock/worker lightweight`
 		go runLightweightWorker()
 	})
-	c.AddFunc("@daily", func() {
+	c.AddFunc("0 */5 * * * *", func() {
 		// TODO: once per day, do heavyweight
 		// ...
+		go runHeavyweightWorker()
 	})
 	c.Start()
 	defer c.Stop()
@@ -33,12 +32,7 @@ func main() {
 
 	// .................
 
-	// Catch signal so we can shutdown gracefully
-	sigCh := make(chan os.Signal)
-	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
-
-	// Wait for a signal
-	<-sigCh
+	utils.GracefulShutdown()
 
 	// pgxcfg, err := pgx.ParseURI(os.Getenv("DATABASE_URL"))
 	// if err != nil {

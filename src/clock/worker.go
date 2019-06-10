@@ -144,7 +144,7 @@ func lookupLatestPage(endpoint string, page int) int {
 	panic(fmt.Sprintf("Request to /%s/%v returned unexpected Status Code %v\n", endpoint, page, response.StatusCode))
 }
 
-func runHeavyweightPoll() {
+func runHeavyweightWorker() {
 	stories := lookupStories()
 	fmt.Println("[STORIES]", stories)
 	for _, data := range stories {
