@@ -4,9 +4,9 @@ import (
 	// que "github.com/bgentry/que-go"
 	// "github.com/jackc/pgx"
 	"fmt"
+	"github.com/JMTyler/homestuck-watcher/src/db"
+	"github.com/JMTyler/homestuck-watcher/src/utils"
 	"github.com/robfig/cron"
-	"homestuck-watcher/src/db"
-	"homestuck-watcher/src/utils"
 )
 
 func main() {

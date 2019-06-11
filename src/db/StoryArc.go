@@ -2,8 +2,8 @@ package db
 
 import (
 	"fmt"
+	"github.com/JMTyler/homestuck-watcher/src/fcm"
 	"github.com/go-pg/pg/orm"
-	"homestuck-watcher/src/fcm"
 	"time"
 )
 

@@ -38,6 +38,6 @@
   unused-packages = true
 
 [metadata.heroku]
-  root-package = "homestuck-watcher"
+  root-package = "github.com/JMTyler/homestuck-watcher"
   go-version = "1.12.5"
   install = ["./cmd/..."]

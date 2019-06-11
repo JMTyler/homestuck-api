@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/JMTyler/homestuck-watcher/src/db"
 	"github.com/PuerkitoBio/goquery"
-	"homestuck-watcher/src/db"
 	"net/http"
 	"regexp"
 	"strings"

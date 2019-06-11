@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/JMTyler/homestuck-watcher/src/db"
+	"github.com/JMTyler/homestuck-watcher/src/fcm"
 	"github.com/PuerkitoBio/goquery"
-	"homestuck-watcher/src/db"
-	"homestuck-watcher/src/fcm"
 	"net/http"
 	"os"
 	"regexp"
