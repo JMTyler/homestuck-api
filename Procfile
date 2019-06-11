@@ -1,3 +1,3 @@
 web:   api
 
-clock: clock
+clock: watcher
