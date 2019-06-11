@@ -1,3 +1,3 @@
-web:   web
+web:   api
 
 clock: clock

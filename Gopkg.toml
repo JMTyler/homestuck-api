@@ -40,4 +40,4 @@
 [metadata.heroku]
   root-package = "homestuck-watcher"
   go-version = "1.12.5"
-  install = ["./src/web", "./src/clock"]
+  install = ["./src/api", "./src/clock"]
