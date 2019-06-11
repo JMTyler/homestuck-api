@@ -1,6 +1,6 @@
 web:   api
 clock: watcher
 
-populate: cmd populate
-ping:     cmd ping
-potato:   cmd potato
+populate: task populate
+ping:     task ping
+potato:   task potato

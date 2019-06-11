@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	// que "github.com/bgentry/que-go"
 	// "github.com/jackc/pgx"
-	"homestuck-watcher/db"
-	// "os"
+	"fmt"
 	"github.com/robfig/cron"
-	"homestuck-watcher/utils"
+	"homestuck-watcher/src/db"
+	"homestuck-watcher/src/utils"
 )
 
 func main() {

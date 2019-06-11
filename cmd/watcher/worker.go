@@ -3,10 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"homestuck-watcher/db"
-	"homestuck-watcher/fcm"
+	"homestuck-watcher/src/db"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -47,7 +45,6 @@ func fetch(endpoint string) *goquery.Document {
 	// 	panic(err)
 	// }
 
-	defer response.Body.Close()
 	doc, err := goquery.NewDocumentFromResponse(response)
 	if err != nil {
 		panic(err)
@@ -129,6 +126,61 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 	return reverse(result)
 }
 
+func lookupLatestPage(endpoint string, page int) int {
+	response, err := http.Head(fmt.Sprintf("%s/%s/%v", BaseURL, endpoint, page))
+	fmt.Printf("Seeking on /%s -- Checking page %v -- Status Code %v\n", endpoint, page, response.StatusCode)
+	if err != nil {
+		panic(err)
+	}
+
+	if response.StatusCode == 404 {
+		return page - 1
+	}
+
+	if response.StatusCode == 200 {
+		return lookupLatestPage(endpoint, page+1)
+	}
+
+	panic(fmt.Sprintf("Request to /%s/%v returned unexpected Status Code %v\n", endpoint, page, response.StatusCode))
+}
+
+func runHeavyweightWorker() {
+	stories := lookupStories()
+	fmt.Println("[STORIES]", stories)
+	for _, data := range stories {
+		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
+		story := &db.Story{Endpoint: data["endpoint"], Title: data["title"]}
+		story.FindOrCreate()
+
+		storyArcs := lookupStoryArcs(story.Endpoint)
+		fmt.Println("[STORY ARCS]", storyArcs)
+		for _, data := range storyArcs {
+			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
+			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
+			arc.FindOrCreate()
+		}
+	}
+}
+
+func runLightweightWorker() {
+	fmt.Printf("Querying for all story-arcs\n")
+	storyArcs := new(db.StoryArc).FindAll()
+
+	fmt.Println("[STORY ARCS]", storyArcs)
+	for _, arc := range storyArcs {
+		fmt.Println()
+		fmt.Println("[SEEKING PAGES]")
+		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
+		fmt.Printf("\nFound latest page: #%v\n", latestPage)
+		if latestPage != arc.Page {
+			arc.ProcessPotato(latestPage)
+		}
+		fmt.Println()
+		fmt.Println("----------------------------------------")
+		fmt.Println()
+	}
+}
+
 func populateEmptyStories() {
 	stories := lookupStories()
 	// fmt.Println("[STORIES]", stories)
@@ -149,43 +201,4 @@ func populateEmptyStories() {
 			// fmt.Println()
 		}
 	}
-}
-
-func main() {
-	if len(os.Args) == 1 {
-		fmt.Println("No command provided")
-		return
-	}
-
-	fmt.Println()
-	defer fmt.Println("\n[[[WORK COMPLETE]]]")
-	defer db.CloseDatabase()
-
-	switch os.Args[1] {
-	case "populate":
-		populateEmptyStories()
-		return
-	case "ping":
-		endpoint := "epilogues/candy"
-		if len(os.Args) >= 3 {
-			endpoint = os.Args[2]
-		}
-
-		arc := &db.StoryArc{Endpoint: endpoint}
-		arc.Find()
-		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
-		return
-	case "potato":
-		endpoint := "epilogues/candy"
-		if len(os.Args) >= 3 {
-			endpoint = os.Args[2]
-		}
-
-		arc := &db.StoryArc{Endpoint: endpoint}
-		arc.Find()
-		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
-		return
-	}
-
-	fmt.Println("Invalid command provided")
 }

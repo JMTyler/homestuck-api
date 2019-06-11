@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"homestuck-watcher/db"
-	"homestuck-watcher/fcm"
+	"homestuck-watcher/src/db"
+	"homestuck-watcher/src/fcm"
 	"io/ioutil"
 	"net/http"
 	"os"
