@@ -28,6 +28,12 @@ func main() {
 		reqBytes, _ := ioutil.ReadAll(r.Body)
 		var req map[string]interface{}
 		_ = json.Unmarshal(reqBytes, &req)
+		if req["token"] == nil || req["token"] == false || req["token"] == "" {
+			w.WriteHeader(422)
+			fmt.Fprintf(w, "Required field `token` was empty")
+			return
+		}
+
 		token := req["token"].(string)
 		// TODO: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
 		err := fcm.Subscribe([]string{token})
