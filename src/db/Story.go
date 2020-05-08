@@ -9,9 +9,9 @@ import (
 type Story struct {
 	ID        int64
 	Title     string
-	Endpoint  string    `sql:", notnull, unique"`
-	CreatedAt time.Time `sql:", notnull, default:now()"`
-	UpdatedAt time.Time `sql:", notnull, default:now()"`
+	Endpoint  string    `pg:", notnull, unique"`
+	CreatedAt time.Time `pg:", notnull, default:now()"`
+	UpdatedAt time.Time `pg:", notnull, default:now()"`
 }
 
 func (s Story) String() string {

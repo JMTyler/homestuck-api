@@ -10,11 +10,11 @@ import (
 type StoryArc struct {
 	ID        int64
 	Title     string
-	Endpoint  string    `sql:", notnull, unique"`
-	Page      int       `sql:", notnull"`
-	StoryID   int64     `sql:", notnull, on_delete:CASCADE, on_update:CASCADE"`
-	CreatedAt time.Time `sql:", notnull, default:now()"`
-	UpdatedAt time.Time `sql:", notnull, default:now()"`
+	Endpoint  string    `pg:", notnull, unique"`
+	Page      int       `pg:", notnull"`
+	StoryID   int64     `pg:", notnull, on_delete:CASCADE, on_update:CASCADE"`
+	CreatedAt time.Time `pg:", notnull, default:now()"`
+	UpdatedAt time.Time `pg:", notnull, default:now()"`
 	Story     *Story
 }
 
