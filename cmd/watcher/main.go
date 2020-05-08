@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/JMTyler/homestuck-watcher/src/db"
 	"github.com/JMTyler/homestuck-watcher/src/utils"
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -15,15 +15,12 @@ func main() {
 	defer db.CloseDatabase()
 
 	// TODO: Consider configuring these from a database table.
-	c := cron.New()
+	c := cron.New(cron.WithSeconds())
 	c.AddFunc("5 * * * * *", func() {
-		// TODO: once every minute, do lightweight
-		// ... start one-off dyno of `clock/worker lightweight`
+		// TODO: convert to one-off dyno of `clock/worker lightweight`
 		go runLightweightWorker()
 	})
 	c.AddFunc("0 0 * * * *", func() {
-		// TODO: once per day, do heavyweight
-		// ...
 		go runHeavyweightWorker()
 	})
 	c.Start()
