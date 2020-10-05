@@ -164,7 +164,7 @@ func runHeavyweightWorker() {
 
 func runLightweightWorker() {
 	fmt.Printf("Querying for all story-arcs\n")
-	storyArcs := new(db.StoryArc).FindAll()
+	storyArcs := new(db.StoryArc).FindAll("v1")
 
 	fmt.Println("[STORY ARCS]", storyArcs)
 	for _, arc := range storyArcs {

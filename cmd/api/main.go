@@ -35,8 +35,7 @@ func main() {
 		}
 
 		token := req["token"].(string)
-		// TODO: Test if this could end up too slow for the web process (once it's being pounded by 1000s of browsers).
-		err := fcm.Subscribe([]string{token})
+		err := fcm.Subscribe("v1", token)
 		if err != nil {
 			// TODO: Gotta start using log.Fatal() and its ilk.
 			fmt.Println(err)
@@ -60,8 +59,14 @@ func main() {
 		reqBytes, _ := ioutil.ReadAll(r.Body)
 		var req map[string]interface{}
 		_ = json.Unmarshal(reqBytes, &req)
+		if req["token"] == nil || req["token"] == false || req["token"] == "" {
+			w.WriteHeader(422)
+			fmt.Fprintf(w, "Required field `token` was empty")
+			return
+		}
+
 		token := req["token"].(string)
-		err := fcm.Unsubscribe([]string{token})
+		err := fcm.Unsubscribe("v1", token)
 		if err != nil {
 			// TODO: Gotta start using log.Fatal() and its ilk.
 			fmt.Println(err)
@@ -78,10 +83,10 @@ func main() {
 			return
 		}
 
-		storyArcs := new(db.StoryArc).FindAll()
+		storyArcs := new(db.StoryArc).FindAll("v1")
 		scrubbed := make([]map[string]interface{}, len(storyArcs))
-		for i, arc := range storyArcs {
-			scrubbed[i] = arc.Scrub()
+		for i, model := range storyArcs {
+			scrubbed[i] = model.Scrub("v1")
 		}
 		res, _ := json.Marshal(scrubbed)
 		w.Header().Add("Content-Type", "application/json")

@@ -19,6 +19,19 @@ func (d dbLogger) AfterQuery(q *pg.QueryEvent) {}
 
 var DB *pg.DB
 
+type Model interface {
+	Scrub(version string) map[string]interface{}
+}
+
+// TODO: Cannot pass in slice of typed models, as slices cannot be converted. More reason to use collections and/or switch to json tags.
+func ScrubModels(version string, models []Model) []map[string]interface{} {
+	scrubbed := make([]map[string]interface{}, len(models))
+	for i, model := range models {
+		scrubbed[i] = model.Scrub(version)
+	}
+	return scrubbed
+}
+
 func InitDatabase() *pg.DB {
 	if DB != nil {
 		return DB

@@ -22,7 +22,8 @@ func (s StoryArc) String() string {
 	return fmt.Sprintf("StoryArc<id:%v, endpoint:'%v', title:'%v', page:%v, %v>", s.ID, s.Endpoint, s.Title, s.Page, s.Story)
 }
 
-func (s *StoryArc) Scrub() map[string]interface{} {
+func (s *StoryArc) Scrub(version string) map[string]interface{} {
+	// v1
 	return map[string]interface{}{
 		"endpoint": s.Endpoint,
 		"title":    s.Story.Title,
@@ -70,10 +71,10 @@ func (a *StoryArc) Update() {
 	// fmt.Printf("Update Complete. Model: %s\n", a)
 }
 
-func (a *StoryArc) FindAll() []StoryArc {
+func (a *StoryArc) FindAll(version string) []*StoryArc {
 	a.Init()
 
-	var arcs []StoryArc
+	var arcs []*StoryArc
 	err := DB.Model(&arcs).Relation("Story").Order("story_arc.created_at").Select()
 	if err != nil {
 		panic(err)
