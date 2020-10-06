@@ -38,7 +38,7 @@ func Init() {
 
 // TODO: Publish
 // TODO: Should switch to using a struct like below, or StoryArc.Scrub(), instead of passing params directly.
-func Ping(event string, story string, arc string, endpoint string, page int) {
+func Ping(event string, story string, arc string, domain string, endpoint string, page int) {
 	if fcmClient == nil {
 		Init()
 	}
@@ -61,6 +61,11 @@ func Ping(event string, story string, arc string, endpoint string, page int) {
 	// 	Page:     page,
 	// }
 	// fmt.Println("Constructing payload:", payload)
+
+	// v1
+	if domain != "homestuck.com" {
+		return
+	}
 
 	// TODO: See documentation on defining a message payload.
 	message := &messaging.Message{

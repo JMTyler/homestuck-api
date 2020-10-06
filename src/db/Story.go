@@ -7,21 +7,22 @@ import (
 )
 
 type Story struct {
-	ID        int64
-	Title     string
-	Endpoint  string    `pg:", notnull, unique"`
-	CreatedAt time.Time `pg:", notnull, default:now()"`
-	UpdatedAt time.Time `pg:", notnull, default:now()"`
+	ID         int64
+	Title      string
+	Domain     string    `pg:", notnull"`
+	Endpoint   string    `pg:", notnull"`
+	CreatedAt  time.Time `pg:", notnull, default:now()"`
+	UpdatedAt  time.Time `pg:", notnull, default:now()"`
 }
 
-func (s Story) String() string {
-	return fmt.Sprintf("Story<id:%v, endpoint:'%s', title:'%s'>", s.ID, s.Endpoint, s.Title)
+func (s *Story) String() string {
+	return fmt.Sprintf("Story<id:%v, url:'%s', title:'%s'>", s.ID, s.Domain+"/"+s.Endpoint, s.Title)
 }
 
 func (s *Story) FindOrCreate() *Story {
 	s.Init()
 
-	_, err := DB.Model(s).Where("endpoint = ?", s.Endpoint).SelectOrInsert(s)
+	_, err := DB.Model(s).Where("domain = ? AND endpoint = ?", s.Domain, s.Endpoint).SelectOrInsert(s)
 	// db.ModelContext(context.Context(), &models).Select()
 	// db.Model(&models).SelectOrInsert()
 	// res, err := db.Query(&models, "endpoint = ?", endpoint)
@@ -44,7 +45,7 @@ func (s *Story) FindOrCreate() *Story {
 	return s
 }
 
-func (s Story) Init() {
+func (s *Story) Init() {
 	InitDatabase()
 
 	err := DB.CreateTable((*Story)(nil), &orm.CreateTableOptions{IfNotExists: true})

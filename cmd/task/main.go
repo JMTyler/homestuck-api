@@ -173,7 +173,7 @@ func main() {
 
 		arc := &db.StoryArc{Endpoint: endpoint}
 		arc.Find()
-		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
+		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Story.Domain, arc.Endpoint, arc.Page)
 		return
 	case "potato":
 		endpoint := "epilogues/candy"
@@ -183,7 +183,7 @@ func main() {
 
 		arc := &db.StoryArc{Endpoint: endpoint}
 		arc.Find()
-		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Endpoint, arc.Page)
+		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Story.Domain, arc.Endpoint, arc.Page)
 		return
 	}
 
