@@ -131,22 +131,19 @@ func lookupStoryArcs(endpoint string) []map[string]string {
 
 func populateEmptyStories() {
 	stories := lookupStories()
-	// fmt.Println("[STORIES]", stories)
 	for _, data := range stories {
-		// fmt.Println("Querying for story with Endpoint =", data["endpoint"])
-		story := &db.Story{Endpoint: data["endpoint"], Title: data["title"]}
-		story.FindOrCreate()
+		collection := data["title"]
 
-		storyArcs := lookupStoryArcs(story.Endpoint)
-		// fmt.Println("[STORY ARCS]", storyArcs)
+		storyArcs := lookupStoryArcs(data["endpoint"])
 		for _, data := range storyArcs {
-			// fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
-			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
-			arc.FindOrCreate()
-
-			// fmt.Println()
-			// fmt.Println("----------------------------------------")
-			// fmt.Println()
+			story := &db.Story{
+				Domain: "homestuck.com",
+				Endpoint: data["endpoint"],
+				Collection: collection,
+				Title: data["title"],
+				Page: 1,
+			}
+			story.FindOrCreate()
 		}
 	}
 }
@@ -171,9 +168,9 @@ func main() {
 			endpoint = os.Args[2]
 		}
 
-		arc := &db.StoryArc{Endpoint: endpoint}
-		arc.Find()
-		fcm.Ping(fcm.SyncEvent, arc.Story.Title, arc.Title, arc.Story.Domain, arc.Endpoint, arc.Page)
+		story := &db.Story{Domain: "homestuck.com", Endpoint: endpoint}
+		story.Find()
+		fcm.Ping(fcm.SyncEvent, story.Collection, story.Title, story.Domain, story.Endpoint, story.Page)
 		return
 	case "potato":
 		endpoint := "epilogues/candy"
@@ -181,9 +178,9 @@ func main() {
 			endpoint = os.Args[2]
 		}
 
-		arc := &db.StoryArc{Endpoint: endpoint}
-		arc.Find()
-		fcm.Ping(fcm.PotatoEvent, arc.Story.Title, arc.Title, arc.Story.Domain, arc.Endpoint, arc.Page)
+		story := &db.Story{Domain: "homestuck.com", Endpoint: endpoint}
+		story.Find()
+		fcm.Ping(fcm.PotatoEvent, story.Collection, story.Title, story.Domain, story.Endpoint, story.Page)
 		return
 	}
 

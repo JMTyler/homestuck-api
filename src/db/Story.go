@@ -2,47 +2,92 @@ package db
 
 import (
 	"fmt"
+	"github.com/JMTyler/homestuck-watcher/src/fcm"
 	"github.com/go-pg/pg/orm"
 	"time"
 )
 
 type Story struct {
 	ID         int64
+	Collection string
 	Title      string
-	Domain     string    `pg:", notnull"`
-	Endpoint   string    `pg:", notnull"`
+	Domain     string    `pg:", notnull, unique:ix_domain_endpoint"`
+	Endpoint   string    `pg:", notnull, unique:ix_domain_endpoint"`
+	Page       int       `pg:", notnull"`
 	CreatedAt  time.Time `pg:", notnull, default:now()"`
 	UpdatedAt  time.Time `pg:", notnull, default:now()"`
 }
 
 func (s *Story) String() string {
-	return fmt.Sprintf("Story<id:%v, url:'%s', title:'%s'>", s.ID, s.Domain+"/"+s.Endpoint, s.Title)
+	title := s.Title
+	if s.Collection != "" {
+		title = s.Collection+": "+title
+	}
+	return fmt.Sprintf("Story<url:'%s', title:'%s'>", s.Domain+"/"+s.Endpoint, title)
+}
+
+func (s *Story) Scrub(version string) map[string]interface{} {
+	// v1
+	return map[string]interface{}{
+		"endpoint": s.Endpoint,
+		"title":    s.Collection,
+		"subtitle": s.Title,
+		"pages":    s.Page,
+	}
 }
 
 func (s *Story) FindOrCreate() *Story {
 	s.Init()
 
 	_, err := DB.Model(s).Where("domain = ? AND endpoint = ?", s.Domain, s.Endpoint).SelectOrInsert(s)
-	// db.ModelContext(context.Context(), &models).Select()
-	// db.Model(&models).SelectOrInsert()
-	// res, err := db.Query(&models, "endpoint = ?", endpoint)
 	if err != nil {
 		panic(err)
 	}
 
-	// fmt.Printf("Query Complete. Inserted? %v  Model: %s\n", inserted, s)
+	return s
+}
 
-	// if res.RowsReturned() == 0 {
-	// 	model = &Story{Endpoint: endpoint}
-	// 	err := db.Insert(model)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }
+func (s *Story) Find() *Story {
+	s.Init()
 
-	// fmt.Printf("Finished Model: %s\n", model)
+	err := DB.Model(s).Where("domain = ? AND endpoint = ?", s.Domain, s.Endpoint).Select(s)
+	if err != nil {
+		panic(err)
+	}
 
 	return s
+}
+
+func (s *Story) Update() {
+	s.Init()
+
+	s.UpdatedAt = time.Now()
+
+	err := DB.Update(s)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Story) FindAll(version string) []*Story {
+	s.Init()
+
+	var stories []*Story
+	query := DB.Model(&stories).Order("created_at")
+	if version == "v1" {
+		query.Where("domain = 'homestuck.com'")
+	}
+	err := query.Select()
+	if err != nil {
+		panic(err)
+	}
+	return stories
+}
+
+func (s *Story) ProcessPotato(page int) {
+	s.Page = page
+	s.Update()
+	fcm.Ping(fcm.PotatoEvent, s.Collection, s.Title, s.Domain, s.Endpoint, s.Page)
 }
 
 func (s *Story) Init() {

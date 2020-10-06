@@ -83,9 +83,9 @@ func main() {
 			return
 		}
 
-		storyArcs := new(db.StoryArc).FindAll("v1")
-		scrubbed := make([]map[string]interface{}, len(storyArcs))
-		for i, model := range storyArcs {
+		stories := new(db.Story).FindAll("v1")
+		scrubbed := make([]map[string]interface{}, len(stories))
+		for i, model := range stories {
 			scrubbed[i] = model.Scrub("v1")
 		}
 		res, _ := json.Marshal(scrubbed)

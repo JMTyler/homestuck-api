@@ -148,66 +148,38 @@ func runHeavyweightWorker() {
 	stories := lookupStories()
 	fmt.Println("[STORIES]", stories)
 	for _, data := range stories {
-		fmt.Println("Querying for story with Endpoint =", data["endpoint"])
-		story := &db.Story{
-			Domain: "homestuck.com",
-			Endpoint: data["endpoint"],
-			Title: data["title"],
-		}
-		story.FindOrCreate()
-
-		storyArcs := lookupStoryArcs(story.Endpoint)
+		collection := data["title"]
+		storyArcs := lookupStoryArcs(data["endpoint"])
 		fmt.Println("[STORY ARCS]", storyArcs)
 		for _, data := range storyArcs {
-			fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
-			arc := &db.StoryArc{
-				StoryID: story.ID,
-				Endpoint: data["endpoint"],
-				Title: data["title"],
-				Page: 1,
+			fmt.Println("Querying for story with Endpoint =", data["endpoint"])
+			story := &db.Story{
+				Domain:     "homestuck.com",
+				Endpoint:   data["endpoint"],
+				Collection: collection,
+				Title:      data["title"],
+				Page:       1,
 			}
-			arc.FindOrCreate()
+			story.FindOrCreate()
 		}
 	}
 }
 
 func runLightweightWorker() {
-	fmt.Printf("Querying for all story-arcs\n")
-	storyArcs := new(db.StoryArc).FindAll("v1")
+	fmt.Printf("Querying for all stories\n")
+	stories := new(db.Story).FindAll("v1")
 
-	fmt.Println("[STORY ARCS]", storyArcs)
-	for _, arc := range storyArcs {
+	fmt.Println("[STORY ARCS]", stories)
+	for _, story := range stories {
 		fmt.Println()
 		fmt.Println("[SEEKING PAGES]")
-		latestPage := lookupLatestPage(arc.Endpoint, arc.Page)
+		latestPage := lookupLatestPage(story.Endpoint, story.Page)
 		fmt.Printf("\nFound latest page: #%v\n", latestPage)
-		if latestPage != arc.Page {
-			arc.ProcessPotato(latestPage)
+		if latestPage != story.Page {
+			story.ProcessPotato(latestPage)
 		}
 		fmt.Println()
 		fmt.Println("----------------------------------------")
 		fmt.Println()
-	}
-}
-
-func populateEmptyStories() {
-	stories := lookupStories()
-	// fmt.Println("[STORIES]", stories)
-	for _, data := range stories {
-		// fmt.Println("Querying for story with Endpoint =", data["endpoint"])
-		story := &db.Story{Endpoint: data["endpoint"], Title: data["title"]}
-		story.FindOrCreate()
-
-		storyArcs := lookupStoryArcs(story.Endpoint)
-		// fmt.Println("[STORY ARCS]", storyArcs)
-		for _, data := range storyArcs {
-			// fmt.Println("Querying for story-arc with Endpoint =", data["endpoint"])
-			arc := &db.StoryArc{StoryID: story.ID, Endpoint: data["endpoint"], Title: data["title"], Page: 1}
-			arc.FindOrCreate()
-
-			// fmt.Println()
-			// fmt.Println("----------------------------------------")
-			// fmt.Println()
-		}
 	}
 }
