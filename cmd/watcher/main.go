@@ -4,8 +4,8 @@ import (
 	// que "github.com/bgentry/que-go"
 	// "github.com/jackc/pgx"
 	"fmt"
-	"github.com/JMTyler/homestuck-watcher/src/db"
-	"github.com/JMTyler/homestuck-watcher/src/utils"
+	"github.com/JMTyler/homestuck-watcher/internal/db"
+	"github.com/JMTyler/homestuck-watcher/internal/utils"
 	"github.com/robfig/cron/v3"
 )
 
@@ -18,10 +18,10 @@ func main() {
 	c := cron.New(cron.WithSeconds())
 	c.AddFunc("5 * * * * *", func() {
 		// TODO: convert to one-off dyno of `clock/worker lightweight`
-		go runLightweightWorker()
+		go updatePageCounts()
 	})
 	c.AddFunc("0 0 * * * *", func() {
-		go runHeavyweightWorker()
+		go discoverNewStories()
 	})
 	c.Start()
 	defer c.Stop()

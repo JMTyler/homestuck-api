@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"github.com/JMTyler/homestuck-watcher/src/fcm"
+	"github.com/JMTyler/homestuck-watcher/internal/fcm"
 	"github.com/go-pg/pg/orm"
 	"time"
 )
@@ -84,7 +84,7 @@ func (s *Story) FindAll(version string) []*Story {
 	return stories
 }
 
-func (s *Story) ProcessPotato(page int) {
+func (s *Story) Potato(page int) {
 	s.Page = page
 	s.Update()
 	fcm.Ping(fcm.PotatoEvent, s.Collection, s.Title, s.Domain, s.Endpoint, s.Page)
