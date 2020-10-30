@@ -1,36 +1,44 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/JMTyler/homestuck-watcher/internal/db"
 	"github.com/JMTyler/homestuck-watcher/internal/fcm"
-	"io/ioutil"
-	"net/http"
+	"github.com/kataras/iris/v12"
 	"os"
 )
 
 func main() {
 	fmt.Println()
-	defer fmt.Println("\n[[[WORK COMPLETE]]]")
 	defer db.CloseDatabase()
 
-	// start := time.Now()
-	// time.Since(start)
+	app := iris.Default()
 
-	http.HandleFunc("/v1/subscribe", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Headers", "*")
-		if r.Method == "OPTIONS" {
+	app.Use(func(ctx iris.Context) {
+		ctx.Header("Access-Control-Allow-Origin", "*")
+		ctx.Header("Access-Control-Allow-Headers", "*")
+
+		//reqBytes, _ := ctx.GetBody()
+		//ctx.GetViewData()
+		//var req map[string]interface{}
+		//_ = json.Unmarshal(reqBytes, &req)
+
+		ctx.Next()
+	})
+
+	app.Options("*", func(ctx iris.Context) {})
+
+	app.Post("/v1/subscribe", func(ctx iris.Context) {
+		var req map[string]interface{}
+		if err := ctx.ReadJSON(&req); err != nil {
+			ctx.StatusCode(iris.StatusUnprocessableEntity)
+			//ctx.StopWithError(iris.StatusUnprocessableEntity, err)
 			return
 		}
 
-		reqBytes, _ := ioutil.ReadAll(r.Body)
-		var req map[string]interface{}
-		_ = json.Unmarshal(reqBytes, &req)
 		if req["token"] == nil || req["token"] == false || req["token"] == "" {
-			w.WriteHeader(422)
-			fmt.Fprintf(w, "Required field `token` was empty")
+			ctx.StatusCode(iris.StatusUnprocessableEntity)
+			ctx.WriteString("Required field `token` was empty")
 			return
 		}
 
@@ -39,29 +47,30 @@ func main() {
 		if err != nil {
 			// TODO: Gotta start using log.Fatal() and its ilk.
 			fmt.Println(err)
-			w.WriteHeader(500)
-			fmt.Fprintf(w, "")
+			ctx.StatusCode(iris.StatusInternalServerError)
+			// TODO: Problem?
 			return
 		}
 
-		res, _ := json.Marshal(map[string]interface{}{"token": token})
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, string(res))
+		ctx.JSON(map[string]interface{}{
+			"token": token,
+		})
+		//ctx.StopWithJSON(iris.StatusOK, map[string]interface{}{
+		//	"token": token,
+		//})
 	})
 
-	http.HandleFunc("/v1/unsubscribe", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Headers", "*")
-		if r.Method == "OPTIONS" {
+	app.Post("/v1/unsubscribe", func(ctx iris.Context) {
+		var req map[string]interface{}
+		if err := ctx.ReadJSON(&req); err != nil {
+			ctx.StatusCode(iris.StatusUnprocessableEntity)
+			//ctx.StopWithError(iris.StatusUnprocessableEntity, err)
 			return
 		}
 
-		reqBytes, _ := ioutil.ReadAll(r.Body)
-		var req map[string]interface{}
-		_ = json.Unmarshal(reqBytes, &req)
 		if req["token"] == nil || req["token"] == false || req["token"] == "" {
-			w.WriteHeader(422)
-			fmt.Fprintf(w, "Required field `token` was empty")
+			ctx.StatusCode(iris.StatusUnprocessableEntity)
+			ctx.WriteString("Required field `token` was empty")
 			return
 		}
 
@@ -70,39 +79,32 @@ func main() {
 		if err != nil {
 			// TODO: Gotta start using log.Fatal() and its ilk.
 			fmt.Println(err)
-			w.WriteHeader(500)
-			fmt.Fprintf(w, "")
+			ctx.StatusCode(iris.StatusInternalServerError)
+			// TODO: Problem?
 			return
 		}
+
+		// TODO: manual 200OK?
 	})
 
-	http.HandleFunc("/v1/stories", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Headers", "*")
-		if r.Method == "OPTIONS" {
-			return
-		}
-
+	app.Get("/v1/stories", func(ctx iris.Context) {
 		stories := new(db.Story).FindAll("v1")
 		scrubbed := make([]map[string]interface{}, len(stories))
 		for i, model := range stories {
 			scrubbed[i] = model.Scrub("v1")
 		}
-		res, _ := json.Marshal(scrubbed)
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, string(res))
+		ctx.JSON(scrubbed)
+		//ctx.StopWithJSON(iris.StatusOK, scrubbed)
 	})
 
-	http.HandleFunc("/error", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Headers", "*")
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "{\"message\":\"Bleep Bloop\"}")
+	app.Get("/error", func(ctx iris.Context) {
+		ctx.Problem(iris.NewProblem().Status(iris.StatusNotFound).Detail("Bleep Bloop").Key("message", "Bleep Bloop"))
 	})
 
 	port, exists := os.LookupEnv("PORT")
 	if !exists {
 		port = "80"
 	}
-	http.ListenAndServe(":"+port, nil)
+
+	app.Listen(":" + port)
 }
