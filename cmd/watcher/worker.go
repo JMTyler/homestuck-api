@@ -19,7 +19,7 @@ func discoverNewStories() {
 }
 
 func updatePageCounts() {
-	stories := new(db.Story).FindAll("v1")
+	stories := new(db.Story).FindAll()
 	for _, story := range stories {
 		latestPage := scraper.SeekLatestPage(story.Domain, story.Endpoint, story.Page)
 		if latestPage != story.Page {

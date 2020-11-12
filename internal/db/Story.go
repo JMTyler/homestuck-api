@@ -26,8 +26,7 @@ func (s *Story) String() string {
 	return fmt.Sprintf("Story<url:'%s', title:'%s'>", s.Domain+"/"+s.Endpoint, title)
 }
 
-func (s *Story) Scrub(version string) map[string]interface{} {
-	// v1
+func (s *Story) Scrub() map[string]interface{} {
 	return map[string]interface{}{
 		"endpoint": s.Endpoint,
 		"title":    s.Collection,
@@ -69,15 +68,11 @@ func (s *Story) Update() {
 	}
 }
 
-func (s *Story) FindAll(version string) []*Story {
+func (s *Story) FindAll() []*Story {
 	s.Init()
 
 	var stories []*Story
-	query := DB.Model(&stories).Order("created_at")
-	if version == "v1" {
-		query.Where("domain = 'homestuck.com'")
-	}
-	err := query.Select()
+	err := DB.Model(&stories).Order("created_at").Where("domain = 'homestuck.com'").Select()
 	if err != nil {
 		panic(err)
 	}

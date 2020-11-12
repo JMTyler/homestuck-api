@@ -11,7 +11,7 @@ type Service struct {
 }
 
 func (s *Service) Subscribe(token string) error {
-	if err := fcm.Subscribe("v1", token); err != nil {
+	if err := fcm.Subscribe(token); err != nil {
 		// TODO: Gotta start using log.Fatal() and its ilk.
 		fmt.Println(err)
 		return err
@@ -21,7 +21,7 @@ func (s *Service) Subscribe(token string) error {
 }
 
 func (s *Service) Unsubscribe(token string) error {
-	if err := fcm.Unsubscribe("v1", token); err != nil {
+	if err := fcm.Unsubscribe(token); err != nil {
 		// TODO: Gotta start using log.Fatal() and its ilk.
 		fmt.Println(err)
 		return err
@@ -31,10 +31,10 @@ func (s *Service) Unsubscribe(token string) error {
 }
 
 func (_ *Service) GetStories() ([]map[string]interface{}, error) {
-	stories := new(db.Story).FindAll("v1")
+	stories := new(db.Story).FindAll()
 	scrubbed := make([]map[string]interface{}, len(stories))
 	for i, model := range stories {
-		scrubbed[i] = model.Scrub("v1")
+		scrubbed[i] = model.Scrub()
 	}
 
 	return scrubbed, nil

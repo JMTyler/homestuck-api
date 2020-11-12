@@ -14,7 +14,7 @@ const (
 	SyncEvent   = "SyncStory"
 )
 
-const topic = "Stories"
+const topic = "v1-Stories"
 
 var fcmClient *messaging.Client
 
@@ -62,14 +62,13 @@ func Ping(event string, story string, arc string, domain string, endpoint string
 	// }
 	// fmt.Println("Constructing payload:", payload)
 
-	// v1
 	if domain != "homestuck.com" {
 		return
 	}
 
 	// TODO: See documentation on defining a message payload.
 	message := &messaging.Message{
-		Topic: "v1-" + topic,
+		Topic: topic,
 		Data: map[string]string{
 			"event":    event,
 			"endpoint": endpoint,
@@ -87,12 +86,12 @@ func Ping(event string, story string, arc string, domain string, endpoint string
 	// fmt.Println("Successfully sent FCM message.")
 }
 
-func Subscribe(version string, token string) error {
+func Subscribe(token string) error {
 	if fcmClient == nil {
 		Init()
 	}
 
-	_, err := fcmClient.SubscribeToTopic(getContext(), []string{token}, version+"-"+topic)
+	_, err := fcmClient.SubscribeToTopic(getContext(), []string{token}, topic)
 	if err != nil {
 		return err
 	}
@@ -101,12 +100,12 @@ func Subscribe(version string, token string) error {
 	return nil
 }
 
-func Unsubscribe(version string, token string) error {
+func Unsubscribe(token string) error {
 	if fcmClient == nil {
 		Init()
 	}
 
-	_, err := fcmClient.UnsubscribeFromTopic(getContext(), []string{token}, version+"-"+topic)
+	_, err := fcmClient.UnsubscribeFromTopic(getContext(), []string{token}, topic)
 	if err != nil {
 		return err
 	}
