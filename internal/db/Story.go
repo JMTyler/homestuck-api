@@ -8,31 +8,22 @@ import (
 )
 
 type Story struct {
-	ID         int64
-	Collection string
-	Title      string
-	Domain     string    `pg:", notnull, unique:ix_domain_endpoint"`
-	Endpoint   string    `pg:", notnull, unique:ix_domain_endpoint"`
-	Page       int       `pg:", notnull"`
-	CreatedAt  time.Time `pg:", notnull, default:now()"`
-	UpdatedAt  time.Time `pg:", notnull, default:now()"`
+	ID         int64     `json:"-"`
+	Collection string    `json:"title"`
+	Title      string    `json:"subtitle"`
+	Domain     string    `json:"-"        pg:", notnull, unique:ix_domain_endpoint"`
+	Endpoint   string    `json:"endpoint" pg:", notnull, unique:ix_domain_endpoint"`
+	Page       int       `json:"pages"    pg:", notnull"`
+	CreatedAt  time.Time `json:"-"        pg:", notnull, default:now()"`
+	UpdatedAt  time.Time `json:"-"        pg:", notnull, default:now()"`
 }
 
 func (s *Story) String() string {
 	title := s.Title
 	if s.Collection != "" {
-		title = s.Collection+": "+title
+		title = s.Collection + ": " + title
 	}
 	return fmt.Sprintf("Story<url:'%s', title:'%s'>", s.Domain+"/"+s.Endpoint, title)
-}
-
-func (s *Story) Scrub() map[string]interface{} {
-	return map[string]interface{}{
-		"endpoint": s.Endpoint,
-		"title":    s.Collection,
-		"subtitle": s.Title,
-		"pages":    s.Page,
-	}
 }
 
 func (s *Story) FindOrCreate() *Story {

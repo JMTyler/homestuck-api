@@ -30,12 +30,6 @@ func (s *Service) Unsubscribe(token string) error {
 	return nil
 }
 
-func (_ *Service) GetStories() ([]map[string]interface{}, error) {
-	stories := new(db.Story).FindAll()
-	scrubbed := make([]map[string]interface{}, len(stories))
-	for i, model := range stories {
-		scrubbed[i] = model.Scrub()
-	}
-
-	return scrubbed, nil
+func (_ *Service) GetStories() ([]*db.Story, error) {
+	return new(db.Story).FindAll(), nil
 }
