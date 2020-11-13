@@ -1,33 +1,19 @@
 package main
 
 import (
-	// que "github.com/bgentry/que-go"
-	// "github.com/jackc/pgx"
 	"fmt"
 	"github.com/JMTyler/homestuck-watcher/internal/db"
 	"github.com/JMTyler/homestuck-watcher/internal/utils"
-	"github.com/robfig/cron/v3"
+	"github.com/JMTyler/homestuck-watcher/internal/watcher"
 )
 
 func main() {
-	fmt.Println()
-	defer fmt.Println("\n[[[WORK COMPLETE]]]")
 	defer db.CloseDatabase()
 
-	// TODO: Consider configuring these from a database table.
-	c := cron.New(cron.WithSeconds())
-	c.AddFunc("5 * * * * *", func() {
-		// TODO: convert to one-off dyno of `clock/worker lightweight`
-		go updatePageCounts()
-	})
-	c.AddFunc("0 0 * * * *", func() {
-		go discoverNewStories()
-	})
-	c.Start()
-	defer c.Stop()
-	defer fmt.Println("Stopping cron ...")
+	watcher.Start()
+	defer watcher.Stop()
 
-	// .................
+	fmt.Println("Watcher has started")
 
 	utils.GracefulShutdown()
 

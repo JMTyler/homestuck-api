@@ -1,4 +1,4 @@
-package main
+package watcher
 
 import (
 	"github.com/JMTyler/homestuck-watcher/internal/db"

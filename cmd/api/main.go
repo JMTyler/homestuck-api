@@ -3,6 +3,7 @@ package main
 import (
 	v1 "github.com/JMTyler/homestuck-watcher"
 	"github.com/JMTyler/homestuck-watcher/internal/db"
+	"github.com/JMTyler/homestuck-watcher/internal/watcher"
 	"github.com/kataras/iris/v12"
 	"os"
 )
@@ -10,10 +11,12 @@ import (
 func main() {
 	defer db.CloseDatabase()
 
+	// Run the watcher under the same dyno as the API, since neither are resource-heavy and dynos cost 💸💸💸
+	watcher.Start()
+	defer watcher.Stop()
+
 	app := iris.Default()
-
 	allowCORS(app)
-
 	v1.AttachRoutes(app.Party("/v1"))
 
 	//app.Get("/error", func(ctx iris.Context) {
