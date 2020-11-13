@@ -30,9 +30,6 @@ func AttachRoutes(party router.Party) {
 		}
 
 		ctx.StatusCode(iris.StatusOK)
-		ctx.Values().Set("res", map[string]interface{}{
-			"token": token,
-		})
 		ctx.Next()
 	})
 
@@ -102,5 +99,6 @@ func respond(ctx iris.Context) {
 		return
 	}
 
+	ctx.Header("Content-Type", "application/json")
 	ctx.Write(res)
 }
